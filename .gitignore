@@ -1,0 +1,9 @@
+# 原始 ChatGPT 對話匯出：含個人資訊，只留在本機
+ChatGPT-*.md
+
+# 系統與編輯器暫存檔
+Thumbs.db
+desktop.ini
+.DS_Store
+*.tmp
+~$*
