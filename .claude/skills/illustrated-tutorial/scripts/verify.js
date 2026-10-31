@@ -44,6 +44,8 @@
   carriers.push(...$$('figure.fig svg foreignObject span, figure.fig svg foreignObject div'));
   carriers.forEach(el => {
     if (!el.textContent.trim() || el.querySelector('tspan')) return;
+    // JS charts only use white text on top of a solid shape (✓ in a filled circle, labels on bars)
+    if (el.closest('.chart') && /^rgb\(255, 255, 255\)$/.test(getComputedStyle(el).fill)) return;
     const svgText = el.tagName === 'text' || el.tagName === 'tspan';
     const L = lum(svgText ? getComputedStyle(el).fill : getComputedStyle(el).color);
     if (L == null) return;

@@ -157,3 +157,7 @@ tables, widgets, recap, quiz, part titles, TOC entries and glossary entries.
 - `html{scroll-behavior:smooth}` makes automated screenshots stale; set `document.documentElement.style.scrollBehavior='auto'` while testing.
 - Widgets must guard against missing elements (`if(!el) return;`), because one throwing IIFE stops all later scripts.
 - Writing files in Windows PowerShell 5.1: use `[IO.File]::WriteAllText(path, text, new UTF8Encoding($false))`; `Set-Content` defaults to ANSI and corrupts CJK text.
+- A `.ps1` script that contains CJK text must be saved as UTF-8 **with BOM**, or Windows PowerShell 5.1 reads it as ANSI and fails with parser errors.
+- Keep `.yg` field names (`<dt>`) short: long names such as `volumeMounts（/tmp）＋ volumes.emptyDir` used to force horizontal scrolling on phones. The template now lets `dt` wrap under 700px, but short names still read better.
+- Before adding a new lesson, check whether earlier lessons already set up the topic (a warning like "not covered here", a table row with no example, a forward mention). If so, add a section there and renumber that lesson's `h3`s instead of creating a standalone lesson, then cross-link both ways ("第 N 堂").
+- `verify.js` needs a real viewport. If the browser pane is hidden, the width reads as 0 and overflow results are meaningless, so set an explicit size (1280×900, then mobile) before running it.

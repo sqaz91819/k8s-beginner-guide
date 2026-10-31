@@ -1,6 +1,6 @@
 # Kubernetes 新手圖解教學
 
-從 VM、Container、Docker 一路到大型 AWS EKS 架構的 Kubernetes 入門課程，給沒有 K8s 經驗的工程師。全書共 17 堂課，搭配 200 多張圖解、IDE 風格的程式碼範例、逐欄位 YAML 說明與互動小工具。
+從 VM、Container、Docker 一路到大型 AWS EKS 架構的 Kubernetes 入門課程，給沒有 K8s 經驗的工程師。全書共 18 堂課，搭配 200 多張圖解、IDE 風格的程式碼範例、逐欄位 YAML 說明與互動小工具。
 
 ## 怎麼閱讀
 
@@ -15,9 +15,9 @@
 
 | 篇章 | 課程 |
 |---|---|
-| 基礎篇 | 01 為什麼需要 Container・02 Docker 實戰・03 Pod／Node／Deployment・04 Service／Ingress・05 設定、Secret 與儲存・06 資源、健康檢查與自動擴展・07 發布、回滾、Helm 與 CI/CD |
-| 進階架構篇 | 08 大型 EKS 系統全貌・09 Envoy Gateway／Gateway API・10 Gateway 架構選型・11 藍綠部署、Canary 與 Argo Rollouts・12 多租戶與安全隔離・13 Service Mesh・14 Multi-AZ 高可用・15 Multi-Region 與災難復原・16 Observability 與故障診斷 |
-| 延伸篇 | 17 Job 與 CronJob |
+| 基礎篇 | 01 為什麼需要 Container・02 Docker 實戰・03 Pod／Node／Deployment（含 Init Container）・04 Service／Ingress・05 設定、Secret 與儲存・06 資源、健康檢查（含 startupProbe）與自動擴展・07 發布、優雅關閉、回滾、Helm 與 CI/CD |
+| 進階架構篇 | 08 大型 EKS 系統全貌・09 Envoy Gateway／Gateway API・10 Gateway 架構選型・11 藍綠部署、Canary 與 Argo Rollouts・12 多租戶與安全隔離（含 Pod 安全加固、External Secrets）・13 Service Mesh・14 Multi-AZ 高可用・15 Multi-Region 與災難復原・16 Observability 與故障診斷 |
+| 延伸篇 | 17 Job 與 CronJob・18 StatefulSet 與 DaemonSet |
 | 附錄 | A 指令與故障速查表・B 名詞辭典 |
 
 ## 撰寫新章節用的 Skill

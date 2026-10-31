@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kubernetes 新手圖解教學</title>
-<meta name="description" content="從 VM、Container、Docker 一路到大型 AWS EKS 架構的 16 堂 Kubernetes 圖解入門課程">
+<meta name="description" content="從 VM、Container、Docker 一路到大型 AWS EKS 架構的 18 堂 Kubernetes 圖解入門課程">
 <style>
 /* 預設：全黑主題。三種區塊刻意使用不同質感：
    文字區＝炭黑卡片、圖解區＝藍圖格線畫布、程式碼＝VS Code 編輯器 */
@@ -201,7 +201,7 @@ table.matrix td.y{background:var(--green)!important;color:#fff;opacity:1;font-we
 .yg dt.i1::before,.yg dt.i2::before,.yg dt.i3::before,.yg dt.i4::before{content:"└ ";color:var(--muted)}
 .yg dd{margin:0;color:var(--ink)}
 .yg .yg-note{grid-column:1/-1;border-top:1px dashed var(--line);padding-top:7px;color:var(--muted);font-size:14px}
-@media (max-width:700px){.yg dl{grid-template-columns:1fr;gap:2px}.yg dd{margin-bottom:8px}}
+@media (max-width:700px){.yg dl{grid-template-columns:1fr;gap:2px}.yg dd{margin-bottom:8px}.yg dt{white-space:normal;overflow-wrap:anywhere}}
 /* ---------- quiz / summary ---------- */
 details.q{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:8px 0;background:var(--card)}
 details.q summary{cursor:pointer;font-weight:700}
@@ -231,7 +231,7 @@ footer{color:var(--muted);text-align:center;font-size:13px;margin-top:40px}
 <button id="tocBtn" aria-label="目錄">☰ 目錄</button>
 <nav id="toc">
   <div class="brand">K8s <span>新手圖解</span>教學</div>
-  <div class="sub">從 Container 到大型 EKS 架構・16 堂課</div>
+  <div class="sub">從 Container 到大型 EKS 架構・18 堂課</div>
   <a href="#guide"><span class="n">📖</span>閱讀指南與學習地圖</a>
   <h4>基礎篇</h4>
   <a href="#l1"><span class="n">01</span>為什麼需要 Container？</a>
@@ -253,6 +253,7 @@ footer{color:var(--muted);text-align:center;font-size:13px;margin-top:40px}
   <a href="#l16"><span class="n">16</span>Observability 與故障診斷</a>
   <h4>延伸篇</h4>
   <a href="#l17"><span class="n">17</span>Job 與 CronJob</a>
+  <a href="#l18"><span class="n">18</span>StatefulSet 與 DaemonSet</a>
   <h4>附錄</h4>
   <a href="#cheat"><span class="n">A</span>指令與故障速查表</a>
   <a href="#glossary"><span class="n">B</span>名詞辭典</a>
@@ -265,16 +266,16 @@ footer{color:var(--muted);text-align:center;font-size:13px;margin-top:40px}
   <h1>Kubernetes 新手圖解教學</h1>
   <p>從「程式怎麼放到伺服器上」開始，一步步認識 VM、Container、Docker，再進入 Kubernetes（K8s）與 AWS EKS，最後理解 200 個微服務等級的大型架構。</p>
   <p>每個專有名詞第一次出現時都會解釋；把滑鼠移到<span class="term" tabindex="0" data-tip="像這樣帶虛線底線的字，滑鼠移上去（手機點一下）就會出現簡短解釋。">虛線底線的字</span>上，就能看到它的意思。</p>
-  <div class="chips"><span>17 堂課</span><span>100+ 張圖解</span><span>可動手實驗</span><span>互動小工具</span><span>附名詞辭典</span></div>
+  <div class="chips"><span>18 堂課</span><span>200+ 張圖解</span><span>可動手實驗</span><span>互動小工具</span><span>附名詞辭典</span></div>
 </header>
 
 <section class="lesson" id="guide">
   <div class="lesson-head"><div class="badge">📖</div><div><h2>閱讀指南與學習地圖</h2><div class="meta">先花 3 分鐘看這裡，後面會輕鬆很多</div></div></div>
   <h3>這份教學適合誰？</h3>
   <p>適合<b>完全沒有 Kubernetes 經驗</b>的工程師：你可能寫過 Python／Go 程式，也許用過 AWS Lambda 這類 Serverless 服務，但對 VM、Container、Docker 之間的關係還不太清楚。我們不預設你懂 Linux 容器管理，也不要求你先背任何名詞。</p>
-  <h3>課程分兩大部分</h3>
-  <p class="lead">學 Kubernetes 最常見的挫折，是一開始就被 Envoy、Service Mesh、Multi-Region 這類名詞淹沒，卻不知道它們建立在哪些基礎上。所以課程刻意分成兩段：前 7 堂只處理「一個應用程式如何被打包、部署、連線、設定、擴展與更新」，等這些動作都能自己做過一遍，第 8 堂開始才換成架構師的視角，討論大型系統為什麼要這樣設計、每種設計要付出什麼代價。</p>
-<p class="look"><b>看圖重點：</b>左邊每一堂都依賴前一堂的產出（例如第 3 堂部署的就是第 2 堂做出來的 Image）；右邊則是用前面的積木組出大型架構。遇到看不懂的進階內容時，可以順著箭頭往回找它依賴的基礎。</p>
+  <h3>課程的三個部分</h3>
+  <p class="lead">學 Kubernetes 最常見的挫折，是一開始就被 Envoy、Service Mesh、Multi-Region 這類名詞淹沒，卻不知道它們建立在哪些基礎上。所以課程刻意分成兩段：前 7 堂只處理「一個應用程式如何被打包、部署、連線、設定、擴展與更新」，等這些動作都能自己做過一遍，第 8 堂開始才換成架構師的視角，討論大型系統為什麼要這樣設計、每種設計要付出什麼代價。最後的延伸篇（第 17、18 堂）補充 Job、CronJob、StatefulSet、DaemonSet 這幾種工作負載，讀完基礎篇就可以隨時閱讀。</p>
+<p class="look"><b>看圖重點：</b>左邊每一堂都依賴前一堂的產出（例如第 3 堂部署的就是第 2 堂做出來的 Image）；右邊則是用前面的積木組出大型架構。遇到看不懂的進階內容時，可以順著箭頭往回找它依賴的基礎。下方的延伸篇只依賴基礎篇。</p>
   <figure class="fig">
 <pre class="mermaid">
 flowchart LR
@@ -286,9 +287,14 @@ flowchart LR
     direction TB
     L8["08 大型 EKS 全貌"] --> L9["09 Envoy Gateway"] --> L10["10 Gateway 選型"] --> L11["11 藍綠 / Canary"] --> L12["12 多租戶安全"] --> L13["13 Service Mesh"] --> L14["14 Multi-AZ"] --> L15["15 Multi-Region"] --> L16["16 Observability"]
   end
+  subgraph X["延伸篇：補充主題"]
+    direction LR
+    L17["17 Job 與 CronJob"] --> L18["18 StatefulSet 與 DaemonSet"]
+  end
   B ==> A
+  B -.-> X
 </pre>
-    <figcaption>16 堂課的學習路線：先學會「怎麼用」，再學「為什麼這樣設計」</figcaption>
+    <figcaption>18 堂課的學習路線：先學會「怎麼用」，再學「為什麼這樣設計」；延伸篇讀完基礎篇就能閱讀</figcaption>
   </figure>
   <h3>一張圖看懂這幾個名詞的關係</h3>
   <p>很多新手卡住的原因，是把 VM、Container、Docker、Kubernetes 當成「互相取代」的技術。其實它們是<b>一層包一層、各管各的事</b>：</p>
@@ -907,6 +913,20 @@ sequenceDiagram
   <tr><td>由 Container Runtime 啟動</td><td>由 Kubernetes 安排到某個 Node</td></tr>
   <tr><td>本身不知道 Kubernetes 的存在</td><td>有 K8s 管理的生命週期、狀態與 IP</td></tr></table></div>
   <div class="call tip">新手可以先記住：<b>1 個 Pod ≈ 1 個 Container</b>。這是方便理解的簡化，不是硬性規定。</div>
+  <h4>Init Container：主程式啟動前的準備工作</h4>
+  <div class="defs"><div class="def"><b>Init Container（初始化容器）</b>寫在 Pod 裡、會在主要 Container 啟動<b>之前</b>依序執行，而且必須成功結束的 Container。全部成功後主程式才會啟動；其中一個失敗時，K8s 會重試它，主程式則一直等待。</div></div>
+  <p class="lead">除了和主程式一起長期運作的 Sidecar，Pod 裡還有另一種輔助角色：只在啟動前出場一次的 Init Container。它適合處理主程式的「前置條件」，例如等資料庫可以連線才啟動、先從外部下載設定檔或憑證、先調整資料夾權限。把這些準備工作寫進主程式會讓程式變複雜；交給 Init Container，主程式就能假設「我啟動時，環境已經準備好了」。</p>
+<p class="look"><b>看圖重點：</b>黃色虛線框的 Init Container 由左到右<b>一個接一個</b>執行，每個都必須成功結束（Exit Code 0），最後才同時啟動右邊框裡的主程式與 Sidecar。這段期間用 <code>kubectl get pods</code> 會看到狀態是 <code>Init:0/2</code>、<code>Init:1/2</code>。</p>
+  <figure class="fig">
+    <div class="flow">
+      <div class="box y dash">Init 1<small>等資料庫可以連線</small></div><div class="arr">→</div>
+      <div class="box y dash">Init 2<small>下載設定檔到共享 Volume</small></div><div class="arr">→</div>
+      <div class="zone" style="border-color:var(--green)"><div class="zl">全部成功後才啟動</div><div class="flow"><div class="box g">主程式 Container</div><div class="box y">Sidecar</div></div></div>
+    </div>
+    <figcaption>Init Container 像「開店前的檢查清單」：依序做完、全部成功，主程式才開始營業</figcaption>
+  </figure>
+  <div class="call tip">Init Container 的寫法和一般 Container 幾乎相同，只是放在 <code>initContainers</code> 欄位（和 <code>containers</code> 同一層）。資料庫結構變更（Migration）雖然也是「啟動前要做的事」，但放在 Init Container 會讓每個副本各跑一次，通常改用第 17 堂的 Job 只執行一次。</div>
+
 
   <h3>3. Deployment：控制 Pod 數量的管理者</h3>
   <p>想讓 API 同時跑 3 份，我們不會手動建 3 個 Pod，而是建立一個 <b>Deployment</b>，告訴它 <code>replicas: 3</code>。</p>
@@ -1612,7 +1632,7 @@ kubectl exec deployment/python-api -- python -c "import os; print(bool(os.getenv
   <div class="call warn"><b class="t">Secret 不等於安全</b>原生 Secret 的安全性依賴：etcd 靜態加密、RBAC 存取權限、Pod 與 Node 的安全設定。<b>絕對不要把真正的密碼明文提交到 Git</b>，也避免把 Secret 印到 Log。</div>
   <div class="tblw"><table><tr><th>設定內容</th><th>建議放哪裡</th></tr>
   <tr><td><code>APP_ENV</code>、<code>LOG_LEVEL</code>、<code>SQS_QUEUE_URL</code>、<code>DATABASE_HOST</code></td><td>ConfigMap</td></tr>
-  <tr><td><code>DATABASE_PASSWORD</code>、第三方 API Token</td><td>Secret／外部 Secret 管理服務</td></tr>
+  <tr><td><code>DATABASE_PASSWORD</code>、第三方 API Token</td><td>Secret／外部 Secret 管理服務（第 12 堂）</td></tr>
   <tr><td>AWS Access Key</td><td>❌ 不要放！改用 IAM Role（Pod Identity）</td></tr>
   <tr><td>TLS 私鑰</td><td>Secret 或憑證管理方案</td></tr></table></div>
 
@@ -1996,6 +2016,28 @@ livenessProbe:
     <figcaption>Probe 的時間軸。正式環境常拆成 <code>/livez</code> 與 <code>/readyz</code> 兩個網址，檢查不同條件</figcaption>
   </figure>
 
+  <h4>啟動很慢的程式：startupProbe</h4>
+  <p class="lead">上面的表格裡還有第三種探針沒有示範。有些程式啟動要很久，例如要載入大型機器學習模型或預熱快取，可能需要一兩分鐘。如果只靠 Liveness，會陷入兩難：<code>initialDelaySeconds</code> 設短，程式還沒啟動完就被判定「卡死」而重啟，下一次啟動又被殺掉，永遠起不來；設長，正常運作時真的卡死，又要等很久才會被發現。startupProbe 把「啟動階段」和「運行階段」分開處理。</p>
+<p class="look"><b>看圖重點：</b>兩邊是同一個需要 90 秒才能啟動的程式。左邊沿用上面的 Liveness 設定，大約第 30 秒就被重啟，永遠到不了 90 秒；右邊的 startupProbe 最多給 150 秒啟動時間，成功後才交給 Liveness，而 Liveness 仍維持原本嚴格的設定。</p>
+  <figure class="fig">
+    <div class="grid2">
+      <div class="panel"><h5>只有 Liveness（第 10 秒開始，每 10 秒一次）</h5><div class="flow col"><div class="box gray">啟動中…需要 90 秒</div><div class="arr">↓</div><div class="box o">連續失敗 3 次（約第 30 秒）</div><div class="arr">↓</div><div class="box r">被重啟 → 又從頭啟動 🔁<small>永遠撐不到 90 秒</small></div></div></div>
+      <div class="panel"><h5>加上 startupProbe</h5><div class="flow col"><div class="box gray">啟動中…需要 90 秒</div><div class="arr">↓</div><div class="box y">startupProbe：最多等 5 × 30 ＝ 150 秒<small>這段期間 Liveness／Readiness 暫停</small></div><div class="arr">↓ 第 90 秒成功</div><div class="box g">改由 Liveness 每 10 秒檢查 ✅</div></div></div>
+    </div>
+    <figcaption>startupProbe 讓慢啟動的程式有足夠時間開機，又不必放寬運行中的 Liveness 設定</figcaption>
+  </figure>
+<pre class="code" data-lang="yaml"><code>startupProbe:
+  httpGet: { path: /healthz, port: 8080 }
+  periodSeconds: 5
+  failureThreshold: 30      # 最多容許 5 × 30 = 150 秒的啟動時間</code></pre>
+  <div class="yg"><div class="yg-h">📖 逐欄位說明：startupProbe</div><dl>
+    <dt>startupProbe</dt><dd>啟動探針，和另外兩種探針寫在同一層。<b>成功一次</b>就代表啟動完成，之後不再執行，改由 Liveness 與 Readiness 接手；在它成功之前，另外兩種探針都不會開始。</dd>
+    <dt class="i1">httpGet</dt><dd>檢查方式，通常和 Liveness 使用同一個網址。</dd>
+    <dt class="i1">periodSeconds: 5</dt><dd>啟動期間每 5 秒檢查一次。</dd>
+    <dt class="i1">failureThreshold: 30</dt><dd>連續失敗 30 次才放棄並重啟 Container。啟動時間上限約為 <code>periodSeconds × failureThreshold</code>。</dd>
+    <dd class="yg-note">💡 設定方法：先量出程式在最慢情況下要多久才能啟動，加一點緩衝後換算成 <code>failureThreshold</code>。幾秒內就能啟動的 API 通常不需要 startupProbe。</dd>
+  </dl></div>
+
   <h3>6. 動手實驗：Requests／Limits + HPA</h3>
 <pre class="code" data-lang="yaml"><code><span class="c"># deployment.yaml 的 Container 加上（本機實驗用數值）</span>
 resources:
@@ -2178,7 +2220,7 @@ gantt
 </pre>
     <figcaption>甘特圖：同一時間點往下看，「服務中」的長條永遠是 3 條（maxUnavailable 0），加上啟動中的最多 4 個 Pod（maxSurge 1）；每個新 Pod Ready 的瞬間，就有一個舊 Pod 結束</figcaption>
   </figure>
-  <div class="call warn">Rolling Update <b>不保證零中斷</b>。如果程式沒有正確處理 Readiness、優雅關閉（Graceful Shutdown）與既有連線，更新時仍可能出現短暫錯誤。</div>
+  <div class="call warn">Rolling Update <b>不保證零中斷</b>。如果程式沒有正確處理 Readiness、優雅關閉（Graceful Shutdown）與既有連線，更新時仍可能出現短暫錯誤，第 3 節會說明怎麼避免。</div>
 
   <h3>2. maxSurge 與 maxUnavailable</h3>
 <pre class="code" data-lang="yaml"><code>strategy:
@@ -2205,7 +2247,88 @@ gantt
   </figure>
   <div class="call key">Readiness Probe 是 Rolling Update 的守門員：新 Pod 還在初始化時若被誤判為 Ready，K8s 就會開始移除舊 Pod，導致請求失敗。</div>
 
-  <h3>3. 實驗：v1 → v2 更新</h3>
+  <h3>3. 優雅關閉：讓 Rolling Update 真正零中斷</h3>
+  <p>前面提醒過，Rolling Update 不保證零中斷。新 Pod 這一端有 Readiness 把關；但舊 Pod 被移除的那一刻也可能出錯：如果舊 Pod 一收到關閉通知就立刻結束，正在處理的請求會被切斷，剛好被送到它身上的新請求也會失敗，使用者看到的就是 502 或「連線被拒絕」。</p>
+  <div class="defs">
+    <div class="def"><b>SIGTERM</b>作業系統送給程式的「請準備結束」訊號。程式可以攔截它，先把手上的工作做完再離開。K8s 要關閉 Container 時，就是送出 SIGTERM。</div>
+    <div class="def"><b>SIGKILL</b>「立刻結束」訊號，程式無法攔截也無法拒絕。寬限時間用完、程式還沒結束時，K8s 會送出 SIGKILL 強制終止。</div>
+    <div class="def"><b>Graceful Shutdown（優雅關閉）</b>收到 SIGTERM 後，不再接新請求、把處理中的請求完成、釋放連線，然後自行結束。</div>
+  </div>
+  <p class="lead">要知道問題出在哪，得先了解「刪除一個 Pod」時叢集裡發生了什麼。關鍵是有<b>兩件事同時開始</b>：一邊是 kubelet 通知 Container 準備關閉；另一邊是把這個 Pod 從 Service 的後端名單（第 4 堂的 EndpointSlice）移除，再由每台 Node 的 kube-proxy 與外部 Load Balancer 更新轉送規則。第二件事要經過好幾個元件，需要幾秒鐘才會傳遍整個叢集，在這段時間裡，仍然會有新請求被送到這個正在關閉的 Pod。</p>
+<p class="look"><b>看圖重點：</b>中間的 <code>par</code> 區塊代表兩條同時進行的路線。上面的「從名單移除」要等各台 Node 更新完才生效；下面的「關閉 Container」只要一步。如果程式收到 SIGTERM 就馬上結束，它會比名單更新更早離開，中間的空檔就是錯誤的來源。preStop 的作用，就是讓下面這條路線晚一點開始。</p>
+  <figure class="fig">
+<pre class="mermaid">
+sequenceDiagram
+    participant U as Deployment
+    participant API as API Server
+    participant EP as EndpointSlice 與 kube-proxy
+    participant K as kubelet
+    participant C as Container（Gunicorn）
+    U->>API: 刪除一個舊 Pod
+    API->>API: 標記 Terminating，開始倒數寬限時間
+    par 同時進行
+        API->>EP: 把 Pod 從後端名單移除
+        EP->>EP: 各 Node 更新轉送規則（需要幾秒）
+    and
+        API->>K: 通知關閉這個 Pod
+        K->>C: 先執行 preStop（例如等待 10 秒）
+        K->>C: 送出 SIGTERM
+        C->>C: 處理完手上的請求後自行結束
+    end
+    K->>C: 寬限時間到仍未結束：送出 SIGKILL
+</pre>
+    <figcaption>刪除 Pod 時，「從名單移除」和「關閉 Container」同時開始；preStop 讓關閉晚一點發生</figcaption>
+  </figure>
+  <p class="lead">把同一個過程放到時間軸上，就能看出 preStop 為什麼有效。下圖假設名單更新要約 5 秒才傳遍叢集、程式收到 SIGTERM 後要約 5 秒處理完手上的請求、寬限時間是預設的 30 秒。這些都是示意值，實際的傳播時間會因叢集規模與 Load Balancer 而不同。</p>
+<p class="look"><b>看圖重點：</b>灰色區塊是「仍有新請求被送進來」的時間。上方沒有 preStop：程式在第 0 秒就開始關閉，灰色區塊裡的新請求全部失敗（紅色）。下方先等 10 秒才送 SIGTERM，程式開始關閉時已經不會再有新請求進來，而且整個過程在 30 秒寬限時間內就結束了。</p>
+  <figure class="fig">
+    <div class="chart" data-chart="shutdown"></div>
+    <figcaption>preStop 先等名單更新完成，再開始關閉程式，讓「還在路上的請求」不會落空</figcaption>
+  </figure>
+<pre class="code" data-lang="yaml"><code>spec:
+  template:
+    spec:
+      terminationGracePeriodSeconds: 30   # 從開始關閉到強制結束的總時間
+      containers:
+        - name: api
+          image: python-api:v2
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep", "10"]  # 先等名單更新傳遍叢集</code></pre>
+  <div class="yg"><div class="yg-h">📖 逐欄位說明：優雅關閉設定（寫在 Deployment 的 Pod 樣板裡）</div><dl>
+    <dt>terminationGracePeriodSeconds</dt><dd>寫在 Pod 層級（和 <code>containers</code> 同一層）。從 Pod 開始關閉起算的<b>總</b>寬限時間，預設 30 秒，而且<b>包含 preStop 花掉的時間</b>。時間到程式還沒結束，就送 SIGKILL。</dd>
+    <dt>containers[].lifecycle</dt><dd>Container 的生命週期掛鉤（Hook）：在啟動後或關閉前執行指定的動作。</dd>
+    <dt class="i1">preStop</dt><dd>在送出 SIGTERM <b>之前</b>先執行的動作。它執行完（或失敗）之後，kubelet 才送 SIGTERM。</dd>
+    <dt class="i2">exec.command</dt><dd>在 Container 裡執行指令。這裡只是 <code>sleep 10</code>：什麼都不做，單純把關閉往後延，等名單更新完成。Image 裡必須有 <code>sleep</code> 指令；<code>python:3.12-slim</code> 有，但極度精簡的 Image（例如 distroless）可能沒有。</dd>
+    <dd class="yg-note">⏱️ 時間預算：<b>preStop 等待時間 ＋ 程式處理完請求的時間 ＜ terminationGracePeriodSeconds</b>，例如 10 ＋ 5 ＜ 30。Kubernetes 1.30 以後也可以直接寫 <code>preStop: { sleep: { seconds: 10 } }</code>，不需要 Image 裡有 sleep 指令。</dd>
+  </dl></div>
+  <p class="lead">preStop 解決的是「名單還沒更新」，程式本身也要配合：收到 SIGTERM 後，要把手上的請求處理完再結束，而不是直接中斷。好消息是 Gunicorn 預設就會這樣做；但有一個常見陷阱，會讓 SIGTERM 根本送不到 Gunicorn 手上，那就是 Dockerfile 裡 <code>CMD</code> 的寫法。</p>
+<p class="look"><b>看圖重點：</b>左邊的 Shell 格式會多出一個 <code>/bin/sh</code> 當作 Container 的第一個行程（PID 1），SIGTERM 會送到 sh 而不是 Gunicorn，Gunicorn 只能等到寬限時間結束被 SIGKILL。右邊的 JSON 陣列格式讓 Gunicorn 直接成為第一個行程。第 2 堂的 Dockerfile 用的就是右邊的寫法。</p>
+  <figure class="fig">
+    <div class="grid2">
+      <div class="panel"><h5>❌ Shell 格式：CMD gunicorn --bind …</h5><div class="flow col"><div class="box">kubelet 送出 SIGTERM</div><div class="arr">↓</div><div class="box o">PID 1：/bin/sh -c "gunicorn …"<small>訊號停在 sh，通常不會轉給 Gunicorn</small></div><div class="arr">↓</div><div class="box r">Gunicorn 繼續執行，寬限時間到被 SIGKILL<small>處理中的請求被切斷</small></div></div></div>
+      <div class="panel"><h5>✅ JSON 格式：CMD ["gunicorn", "--bind", …]</h5><div class="flow col"><div class="box">kubelet 送出 SIGTERM</div><div class="arr">↓</div><div class="box g">PID 1：gunicorn<small>直接收到訊號</small></div><div class="arr">↓</div><div class="box g">停止接新連線，處理完手上的請求後結束 ✅</div></div></div>
+    </div>
+    <figcaption>CMD 用 JSON 陣列格式，SIGTERM 才會直接送到程式手上，這是容器能優雅關閉的前提</figcaption>
+  </figure>
+  <div class="call note"><b class="t">Gunicorn 的關閉行為</b>Gunicorn 收到 SIGTERM 後會停止接受新連線，等 Worker 把處理中的請求做完，最多等 <code>--graceful-timeout</code> 秒（預設 30 秒）。如果你把 Pod 的 <code>terminationGracePeriodSeconds</code> 調短，記得也把這個值調得比它更短，否則 Gunicorn 還在等，Pod 就先被 SIGKILL 了。</div>
+  <p class="lead">到這裡，一個 Pod 從出生到結束的每個階段，我們都在不同課堂遇過了：第 3 堂的 Init Container、第 6 堂的三種探針，以及這一節的優雅關閉。把它們排在同一條時間軸上，就是 Pod 完整的一生。之後遇到問題時，可以先判斷卡在哪一個階段，再去找對應的設定。</p>
+<p class="look"><b>看圖重點：</b>由左到右是時間順序。黃色是啟動前準備、藍色是確認能不能服務、綠色是正常服務、橘色與紅色是關閉。每一格下方的小字就是對應的設定欄位。</p>
+  <figure class="fig">
+    <div class="flow">
+      <div class="box y">啟動前準備<small>initContainers（第 3 堂）</small></div><div class="arr">→</div>
+      <div class="box">啟動完成了嗎？<small>startupProbe（第 6 堂）</small></div><div class="arr">→</div>
+      <div class="box">可以接流量了嗎？<small>readinessProbe</small></div><div class="arr">→</div>
+      <div class="box g">正常服務<small>livenessProbe 持續監看</small></div><div class="arr">→</div>
+      <div class="box o">準備關閉<small>preStop</small></div><div class="arr">→</div>
+      <div class="box o">處理完手上的請求<small>SIGTERM</small></div><div class="arr">→</div>
+      <div class="box r">強制結束<small>SIGKILL（寬限時間到）</small></div>
+    </div>
+    <figcaption>Pod 的一生：每個階段都有對應的設定，出問題時先判斷卡在哪一格</figcaption>
+  </figure>
+
+  <h3>4. 實驗：v1 → v2 更新</h3>
 <pre class="code" data-lang="bash"><code>minikube start &amp;&amp; kubectl config current-context    <span class="c"># 確認 minikube</span>
 kubectl delete -f hpa.yaml                          <span class="c"># 若上堂 HPA 還在，先移除避免干擾</span>
 
@@ -2220,7 +2343,7 @@ kubectl rollout status deployment/python-api        <span class="c"># successful
 kubectl rollout history deployment/python-api       <span class="c"># 查看版本歷史</span>
 kubectl port-forward service/python-api 18080:80    <span class="c"># 另開 Terminal：curl localhost:18080</span></code></pre>
 
-  <h3>4. Rollback：回到上一個版本</h3>
+  <h3>5. Rollback：回到上一個版本</h3>
 <pre class="code" data-lang="bash"><code>kubectl rollout undo deployment/python-api
 kubectl rollout status deployment/python-api</code></pre>
   <p class="lead">新版出問題時，<code>kubectl rollout undo</code> 能在幾秒內退回上一版，非常適合緊急止血。但它有一個容易被忽略的後遺症：它只改了叢集裡的狀態，你版本控制中的 YAML 還是新版。只要之後有人（或 CI/CD）重新套用那份 YAML，壞掉的版本就會再次上線。</p>
@@ -2242,7 +2365,7 @@ flowchart LR
   <div class="defs"><div class="def"><b>Configuration Drift（設定漂移）</b>Git 裡記錄的期望狀態，和 Cluster 的實際狀態不一致。正式環境應透過 Helm 或 GitOps 的版本流程回滾，而不是只靠手動指令。</div></div>
   <div class="call warn"><b class="t">K8s 會自動 Rollback 嗎？不會！</b>新版卡在 <code>ImagePullBackOff</code>、<code>CrashLoopBackOff</code> 時，超過 <code>progressDeadlineSeconds</code> 後 K8s 只會把 Deployment 標記為「沒有進展」，<b>不會自動回到舊版</b>。需要手動 undo、Helm rollback、CI/CD 或 GitOps 來處理。所以完整流程應該是：部署 → 等待 Ready → 驗證 → 成功／失敗處理。</div>
 
-  <h3>5. Helm：為什麼不直接管理大量 YAML？</h3>
+  <h3>6. Helm：為什麼不直接管理大量 YAML？</h3>
   <p>20 個微服務 × 每個 6 份 YAML（Deployment、Service、ConfigMap、Secret、HPA、Ingress）× 3 個環境 = 幾百份幾乎一樣的 YAML，維護起來很痛苦。</p>
   <div class="tblw"><table><tr><th>設定</th><th>Dev</th><th>Staging</th><th>Production</th></tr>
   <tr><td>Replicas</td><td>1</td><td>2</td><td>6</td></tr>
@@ -2302,7 +2425,7 @@ image:
   <tr><td><code>helm lint</code></td><td>檢查 Chart 格式</td></tr></table></div>
   <div class="call note">Helm 的 Release 歷史和 <code>kubectl rollout history</code> 的 Deployment 版本是<b>不同層級</b>的紀錄。用 Helm 管理的資源，請走 Helm／GitOps 流程，不要手動改。</div>
 
-  <h3>6. AWS EKS 的完整 CI/CD 流程</h3>
+  <h3>7. AWS EKS 的完整 CI/CD 流程</h3>
   <div class="defs"><div class="def"><b>CI/CD</b>持續整合／持續部署：程式推上 Git 後，自動測試、建置、部署的流水線。</div>
   <div class="def"><b>Jenkins</b>常見的 CI/CD 自動化伺服器，執行 Pipeline（流水線）腳本。</div></div>
   <p class="lead">手動執行 build、push、apply 適合學習，但正式團隊需要的是可重複、可稽核、出錯會停下來的自動流程。CI/CD 把前幾堂學到的每個動作串成流水線：程式推上 Git 後，自動測試、建立 Image、推到 ECR、用 Helm 部署到 EKS，最後確認新版真的跑起來。</p>
@@ -2310,10 +2433,11 @@ image:
   <figure class="fig">
 <pre class="mermaid">
 flowchart LR
-    G["📁 Git Push"] --> J["🔧 Jenkins CI"] --> T["🧪 測試"] --> B["🐳 Docker Build"] --> E["☁️ Push 到 ECR"] --> H["⎈ Helm Upgrade"] --> K["☸️ EKS 部署"] --> V["✅ Rollout 驗證"]
+    G["📁 Git Push"] --> J["🔧 Jenkins CI"] --> T["🧪 測試"] --> B["🐳 Docker Build"] --> SC["🔍 弱點掃描"] --> E["☁️ Push 到 ECR"] --> H["⎈ Helm Upgrade"] --> K["☸️ EKS 部署"] --> V["✅ Rollout 驗證"]
 </pre>
     <figcaption>典型流程：每個階段各司其職，最後一定要驗證部署是否真的成功</figcaption>
   </figure>
+  <div class="call warn"><b class="t">Push 前先做弱點掃描</b>Image 裡的作業系統套件與 Python 套件都可能有已知漏洞。常見做法是在 Pipeline 裡用 Trivy 這類工具掃描，或開啟 ECR 的 Image Scanning；發現高風險漏洞就讓 Pipeline 失敗，不讓有問題的 Image 進到叢集。Image 跑起來之後的安全設定，會在第 12 堂介紹。</div>
   <h4>為什麼正式環境不要用 latest 標籤？</h4>
   <p class="lead">CI/CD 每次都會產生新的 Image，該用什麼 Tag 命名？最省事的做法是一律用 <code>latest</code>，但這會讓你在出事時無法回答一個關鍵問題：線上現在跑的究竟是哪一份程式碼？而且回滾時，你想退回的「上一版 latest」早就被覆蓋了。</p>
 <p class="look"><b>看圖重點：</b>左邊同一個名字在不同時間指向不同內容；右邊每個版本都有唯一名稱，能從線上 Image 一路追回對應的 Git Commit。</p>
@@ -2326,7 +2450,7 @@ flowchart LR
   </figure>
   <p>ECR Image 位址的樣子：<code>123456789012.dkr.ecr.ap-northeast-1.amazonaws.com/python-api:v2</code>（帳號 ID ＋ Region ＋ Repository ＋ Tag）。</p>
 
-  <h3>7. Jenkins 直接部署，還是 GitOps？</h3>
+  <h3>8. Jenkins 直接部署，還是 GitOps？</h3>
   <div class="defs"><div class="def"><b>GitOps</b>用 Git 保存 K8s 的期望狀態，由 Cluster 裡的 Controller（如 Argo CD、Flux）自動把實際狀態同步成 Git 的樣子。</div></div>
   <p class="lead">CI/CD 的最後一步「把新版部署到 EKS」，業界有兩種主流做法，差別在於<b>誰有權修改叢集</b>。Push 模式由 Jenkins 拿著叢集權限直接部署；Pull 模式則讓叢集裡的 GitOps Controller 自己去讀 Git，Jenkins 只負責更新 Git 裡的設定。兩者都能運作，但安全性、可稽核性與除錯方式不同。</p>
 <p class="look"><b>看圖重點：</b>比較兩張圖的最後兩格：左邊是 Jenkins 推進叢集，右邊是 Argo CD／Flux 從 Git 拉進叢集。在右邊的模式下，Git 就是叢集狀態的唯一依據。</p>
@@ -2347,7 +2471,7 @@ flowchart TD
   <div class="tblw"><table><tr><th></th><th>Jenkins 直接部署</th><th>GitOps</th></tr>
   <tr><td>優點</td><td>流程直接、容易整合現有 Pipeline</td><td>Git 就是唯一真相、可稽核、自動修正漂移</td></tr>
   <tr><td>注意</td><td>Jenkins 要有 EKS 部署權限，需防止手動修改造成漂移</td><td>手動修改會被自動改回去；要釐清誰擁有哪些欄位</td></tr></table></div>
-  <h3>8. 實際專案最容易遇到的問題</h3>
+  <h3>9. 實際專案最容易遇到的問題</h3>
   <div class="tblw"><table><tr><th>問題</th><th>可能原因</th><th>優先檢查</th></tr>
   <tr><td>Image 已 Push，Pod 還是舊版</td><td>Deployment 沒更新、Tag 重用</td><td>Deployment 的 Image 與 Digest</td></tr>
   <tr><td>Rollout 一直卡住</td><td>新 Pod Readiness 失敗、資源不足</td><td><code>kubectl describe pod</code></td></tr>
@@ -2358,8 +2482,9 @@ flowchart TD
     <li><b>Rolling Update</b> 逐步替換 Pod；<code>maxSurge</code>／<code>maxUnavailable</code> 控制節奏；Readiness 是守門員。</li>
     <li><code>kubectl rollout undo</code> 不會改 Git → 小心<b>設定漂移</b>。K8s <b>不會自動回滾</b>。</li>
     <li><b>Helm</b> = 模板（Chart）+ 參數（Values）→ 實例（Release）。先用 <code>helm template</code> 看產物。</li>
-    <li>正式環境用<b>不可變 Image Tag</b>；部署方式分 Jenkins 直推與 <b>GitOps</b>。</li></ul></div>
+    <li>正式環境用<b>不可變 Image Tag</b>；部署方式分 Jenkins 直推與 <b>GitOps</b>。</li><li>舊 Pod 的關閉也要設計：<b>preStop</b> 先等名單更新、程式正確處理 <b>SIGTERM</b>，總時間要在 <code>terminationGracePeriodSeconds</code> 之內。</li></ul></div>
   <details class="q"><summary>自我檢查：Rollback 後又執行 kubectl apply -f deployment.yaml，會發生什麼？</summary>如果 Git 裡的 YAML 仍是 v2，就會把壞掉的 v2 再部署一次。要記得同步修正 Git 裡的設定。</details>
+  <details class="q"><summary>自我檢查：程式已經正確處理 SIGTERM，為什麼 Rolling Update 時偶爾還是出現 502？</summary>因為「從 Service 名單移除」和「送出 SIGTERM」是同時開始的。名單更新傳遍叢集需要幾秒，程式卻先結束了，這段時間送進來的請求就會失敗。加上 preStop 等待幾秒，讓名單先更新完再開始關閉。</details>
 </section>
 
 <div class="part-title" id="part2"><h2>第二部分｜進階架構篇</h2><p>目標：從「會操作 K8s」進步到「看得懂、能評估大型 EKS 系統架構」。重點從「某個資源怎麼用」轉成「為什麼這樣設計、代價是什麼」。</p></div>
@@ -3624,7 +3749,7 @@ kubectl argo rollouts get rollout payment-api -n lab-payment   <span class="c">#
 
 <!-- ======================= L12 ======================= -->
 <section class="lesson" id="l12">
-  <div class="lesson-head"><div class="badge adv">12</div><div><h2>多租戶與安全隔離：RBAC、NetworkPolicy 與更多</h2><div class="meta">約 90 分鐘・企業級平台治理</div></div></div>
+  <div class="lesson-head"><div class="badge adv">12</div><div><h2>多租戶與安全隔離：RBAC、NetworkPolicy 與更多</h2><div class="meta">約 120 分鐘・企業級平台治理</div></div></div>
   <div class="goals"><b>問題</b>：Account Team 與 Payment Team 共用一個 EKS，如何確保 Account 的工程師或 Pod <b>不能</b>擅自讀取 Payment 的 Secret、呼叫不該呼叫的服務、修改別人的 Gateway、使用別人的 AWS 權限？</div>
   <div class="defs"><div class="def"><b>Multi-Tenancy（多租戶）</b>多個團隊（租戶）共用同一套平台，彼此需要隔離的設計。</div></div>
 
@@ -3646,7 +3771,7 @@ flowchart TB
 </pre>
     <figcaption>共用叢集的潛在風險：預設情況下，Namespace 擋不住這兩條虛線</figcaption>
   </figure>
-  <p class="lead">「權限」這個詞在 K8s 平台上至少有五種不同的意思，分別由不同的系統檢查。把它們混為一談，就會出現「明明設定了 RBAC，Pod 還是能連到別人的服務」這類誤會。先把每一種想阻擋的行為與對應的機制列清楚，後面再逐一說明。</p>
+  <p class="lead">「權限」這個詞在 K8s 平台上有好幾種不同的意思，分別由不同的系統檢查。把它們混為一談，就會出現「明明設定了 RBAC，Pod 還是能連到別人的服務」這類誤會。先把每一種想阻擋的行為與對應的機制列清楚，後面再逐一說明。</p>
 <p class="look"><b>看圖重點：</b>左欄是你想阻止的行為，右欄是負責的機制。注意第一列和第二列：同樣是「Account 碰到 Payment」，一個是工程師用 kubectl 讀資料，一個是程式發網路請求，負責的機制完全不同。</p>
   <figure class="fig">
     <div class="tblw" style="margin:0"><table><tr><th>你想阻止什麼？</th><th>應該用什麼機制？</th></tr>
@@ -3655,20 +3780,23 @@ flowchart TB
     <tr><td>🚪 Account HTTPRoute 擅自掛上外部 Gateway</td><td>Gateway <b>allowedRoutes</b></td></tr>
     <tr><td>🔗 Account HTTPRoute 擅自引用 Payment Service</td><td><b>ReferenceGrant</b></td></tr>
     <tr><td>☁️ Account Pod 存取 Payment 的 DynamoDB／S3</td><td><b>AWS IAM + Pod Identity／IRSA</b></td></tr>
-    <tr><td>📈 某團隊吃光整個叢集的資源</td><td><b>ResourceQuota／LimitRange</b></td></tr></table></div>
-    <figcaption>五種不同的權限問題，各有專屬機制——一個機制無法取代其他機制</figcaption>
+    <tr><td>📈 某團隊吃光整個叢集的資源</td><td><b>ResourceQuota／LimitRange</b></td></tr><tr><td>🧨 被入侵的 Container 以 root 改寫程式、提升權限</td><td><b>securityContext／Pod Security Admission</b></td></tr><tr><td>🔑 密碼寫進 Git 或散落在各處</td><td><b>External Secrets ＋ AWS Secrets Manager</b></td></tr></table></div>
+    <figcaption>每一種權限問題都有專屬機制——一個機制無法取代其他機制</figcaption>
   </figure>
   <p class="lead">上一張表是「一對一」的列表，但讀者常會進一步問：既然 RBAC 這麼重要，它能不能順便擋住其他威脅？用矩陣把每一種威脅和每一種機制交叉比對，答案就很清楚了。</p>
 <p class="look"><b>看圖重點：</b>整張矩陣只有對角線是綠色，其他格都是「擋不住」。這代表任何一個機制漏設，對應那一列的威脅就完全沒有防護，沒有其他機制能補位。</p>
   <figure class="fig">
     <div class="tblw" style="margin:0"><table class="matrix">
-      <tr><th>威脅 ＼ 機制</th><th>RBAC</th><th>Network<br>Policy</th><th>allowed<br>Routes</th><th>Reference<br>Grant</th><th>IAM ＋<br>Pod Identity</th><th>Resource<br>Quota</th></tr>
-      <tr><td>工程師偷看別組 Secret</td><td class="y">✔</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td></tr>
-      <tr><td>Pod 直連別組服務</td><td>✖</td><td class="y">✔</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td></tr>
-      <tr><td>擅自掛上共用入口</td><td>✖</td><td>✖</td><td class="y">✔</td><td>✖</td><td>✖</td><td>✖</td></tr>
-      <tr><td>Route 引用別組 Service</td><td>✖</td><td>✖</td><td>✖</td><td class="y">✔</td><td>✖</td><td>✖</td></tr>
-      <tr><td>存取別組的 AWS 資源</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td><td class="y">✔</td><td>✖</td></tr>
-      <tr><td>吃光整個叢集的資源</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td><td class="y">✔</td></tr>
+      <tr><th>威脅 ＼ 機制</th><th>RBAC</th><th>Network<br>Policy</th><th>allowed<br>Routes</th><th>Reference<br>Grant</th><th>IAM ＋<br>Pod Identity</th><th>Resource<br>Quota</th><th>Pod<br>Security</th><th>External<br>Secrets</th></tr>
+      <tr><td>工程師偷看別組 Secret</td><td class="y">✔</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td></tr>
+      <tr><td>Pod 直連別組服務</td><td>✖</td><td class="y">✔</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td></tr>
+      <tr><td>擅自掛上共用入口</td><td>✖</td><td>✖</td><td class="y">✔</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td></tr>
+      <tr><td>Route 引用別組 Service</td><td>✖</td><td>✖</td><td>✖</td><td class="y">✔</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td></tr>
+      <tr><td>存取別組的 AWS 資源</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td><td class="y">✔</td><td>✖</td><td>✖</td><td>✖</td></tr>
+      <tr><td>吃光整個叢集的資源</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td><td class="y">✔</td><td>✖</td><td>✖</td></tr>
+    
+      <tr><td>容器被入侵後提升權限</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td><td class="y">✔</td><td>✖</td></tr>
+      <tr><td>密碼散落、寫進 Git</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td><td>✖</td><td class="y">✔</td></tr>
     </table></div>
     <figcaption>矩陣熱度圖：只有對角線亮起——每一種威脅都只有一個對應的機制能擋。少了任何一欄，那一列的威脅就沒人管</figcaption>
   </figure>
@@ -3907,7 +4035,182 @@ spec:
     <figcaption>ResourceQuota 為 Namespace 設定總量上限；通常再搭配 LimitRange（單一 Pod 預設值／上限）</figcaption>
   </figure>
 
-  <h3>7. 把所有安全機制疊起來看</h3>
+  <h3>7. Pod 本身的安全：securityContext 與 Pod Security Standards</h3>
+  <p>前面的機制都在限制「誰能碰到什麼」。但還有一種情況必須考慮：如果某個 Pod 的程式本身有漏洞，攻擊者已經能在 Container 裡執行指令了呢？這時能造成多大傷害，取決於這個 Container 擁有多少能力。預設情況下，Container 通常以 root 身分執行（第 2 堂的 Dockerfile 就沒有指定使用者）、可以改寫自己的檔案系統，也保留了一部分 Linux 特權。這些能力都可能成為攻擊者往 Node、甚至往其他團隊擴散的跳板。</p>
+  <div class="defs">
+    <div class="def"><b>securityContext（安全情境）</b>寫在 Pod 或 Container 裡的安全設定：用哪個使用者執行、能不能取得更高權限、檔案系統能不能寫入、保留哪些 Linux 特權。</div>
+    <div class="def"><b>Linux Capabilities（Linux 特權）</b>Linux 把 root 的超級權限拆成數十個小項目，例如修改網路設定、變更檔案擁有者。Container 預設會保留其中一部分，但一般 API 一個都用不到。</div>
+    <div class="def"><b>Privileged Container（特權容器）</b>幾乎擁有整台 Node 權限的 Container。只有網路外掛、儲存驅動這類系統元件才需要，一般應用程式絕對不該使用。</div>
+  </div>
+  <p class="lead">安全加固的目標不是「讓程式永遠不會被入侵」，而是「被入侵時，損害只停留在這個 Container 裡」。這和第 13 堂的 mTLS、這堂前面的 NetworkPolicy 是同一個思路：假設某一層會失守，靠下一層把影響範圍縮小。下面比較同一個被入侵的 Container，在預設設定與加固設定下，攻擊者分別能做到什麼。</p>
+<p class="look"><b>看圖重點：</b>左邊每一格都是攻擊者可以利用的能力，最下面一格是最壞的結果；右邊每一格對應一個 securityContext 設定，把左邊的能力逐一拿掉。</p>
+  <figure class="fig">
+    <div class="grid2">
+      <div class="panel"><h5>😱 預設設定</h5><div class="flow col">
+        <div class="box r">以 root 身分執行<small>可以改寫 /app 的程式、安裝攻擊工具</small></div>
+        <div class="box r">保留預設 Linux 特權<small>多了嘗試提升權限的機會</small></div>
+        <div class="box r">允許權限提升<small>可透過特殊程式取得更高權限</small></div>
+        <div class="box r dash">若叢集也允許特權容器或掛載 Node 資料夾<small>可能進一步控制整台 Node</small></div></div></div>
+      <div class="panel"><h5>🛡️ 加固後</h5><div class="flow col">
+        <div class="box g">runAsNonRoot：一般使用者 10001<small>沒有 root 權限</small></div>
+        <div class="box g">readOnlyRootFilesystem<small>無法改寫程式或放入工具</small></div>
+        <div class="box g">drop ALL ＋ 禁止權限提升<small>沒有任何多餘的特權</small></div>
+        <div class="box g dash">Pod Security Admission 擋掉特權設定<small>損害被限制在這個 Container 內</small></div></div></div>
+    </div>
+    <figcaption>securityContext 不能防止被入侵，但能大幅縮小入侵後的破壞範圍</figcaption>
+  </figure>
+<pre class="code" data-lang="yaml" data-file="deployment.yaml（安全加固片段）"><code>spec:
+  template:
+    spec:
+      securityContext:                  # Pod 層級：套用到所有 Container
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api
+          image: python-api:v3
+          securityContext:              # Container 層級：只套用在這個 Container
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp           # 唯讀檔案系統下，保留一個可寫的暫存區
+      volumes:
+        - name: tmp
+          emptyDir: {}</code></pre>
+  <div class="yg"><div class="yg-h">📖 逐欄位說明：securityContext</div><dl>
+    <dt>spec.securityContext</dt><dd>Pod 層級的安全設定，套用到 Pod 裡所有的 Container。</dd>
+    <dt class="i1">runAsNonRoot: true</dt><dd>要求 Container 不能以 root 執行。如果 Image 預設是 root、又沒有指定 <code>runAsUser</code>，Pod 會停在 <code>CreateContainerConfigError</code>，而不是默默以 root 跑起來。</dd>
+    <dt class="i1">runAsUser: 10001</dt><dd>以哪個 Linux 使用者編號（UID）執行。選一個不會和系統帳號重複的大數字。注意一般使用者不能監聽 1024 以下的 Port，我們的程式用 8080 沒有問題。</dd>
+    <dt class="i1">seccompProfile.type: RuntimeDefault</dt><dd>啟用容器執行環境預設的系統呼叫過濾規則，擋掉一般程式用不到、但常被攻擊利用的底層呼叫。</dd>
+    <dt>containers[].securityContext</dt><dd>Container 層級的設定，只影響這個 Container。</dd>
+    <dt class="i1">allowPrivilegeEscalation: false</dt><dd>禁止程式在執行過程中取得比啟動時更高的權限（例如透過特殊程式變成 root）。</dd>
+    <dt class="i1">readOnlyRootFilesystem: true</dt><dd>讓 Container 的檔案系統變成唯讀，攻擊者無法改寫程式或放入工具。程式需要寫入的位置，改用 emptyDir 掛載。</dd>
+    <dt class="i1">capabilities.drop: ["ALL"]</dt><dd>移除所有 Linux 特權。少數程式需要特定特權時，再用 <code>add</code> 個別加回。</dd>
+    <dt class="i1">/tmp 的 emptyDir</dt><dd>Gunicorn 啟動時會在 <code>/tmp</code> 建立暫存檔。檔案系統唯讀後，要額外掛一個可寫的 emptyDir（第 5 堂），否則程式會啟動失敗。</dd>
+    <dd class="yg-note">💡 導入方式：先在測試環境套用，觀察程式是否還需要寫入其他路徑，再逐一用 emptyDir 補上，最後才推到正式環境。</dd>
+  </dl></div>
+  <p>比起每次都在 YAML 指定 <code>runAsUser</code>，更好的做法是讓 Image 本身就以一般使用者執行。在第 2 堂的 Dockerfile 加上兩行（注意 Dockerfile 的註解必須獨立一行，不能寫在指令後面）：</p>
+<pre class="code" data-lang="dockerfile" data-file="Dockerfile"><code>FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY app.py .
+# 新增：建立一般使用者，之後都以它的身分執行
+RUN useradd --uid 10001 --no-create-home appuser
+USER 10001
+EXPOSE 8080
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]</code></pre>
+
+  <h4>誰來確保每個團隊都有設定？Pod Security Standards</h4>
+  <div class="defs">
+    <div class="def"><b>Pod Security Standards（Pod 安全標準）</b>Kubernetes 官方定義的三個安全等級：Privileged（不限制）、Baseline（擋掉已知危險的設定）、Restricted（要求完整加固）。</div>
+    <div class="def"><b>Pod Security Admission</b>K8s 內建的檢查機制。在 Namespace 貼上標籤後，建立 Pod 時就會依指定等級檢查，不符合的 Pod 可以直接拒絕、只顯示警告，或寫進稽核紀錄。</div>
+  </div>
+  <p class="lead">securityContext 寫在每個 Deployment 裡，靠的是每個團隊自己記得寫。在 200 個服務的平台上，一定會有人漏掉。平台團隊需要在 Namespace 層級設一道門檻：不符合安全標準的 Pod 一律不准建立。Kubernetes 內建的 Pod Security Admission 就是這道門檻，它依照官方的三個等級來檢查。</p>
+<p class="look"><b>看圖重點：</b>每一列是一種設定，綠色 ✔ 代表該等級<b>允許</b>。越往右越嚴格：Baseline 擋掉特權容器與直接使用 Node 的資源，Restricted 再要求不能用 root、禁止權限提升、移除所有特權。上面那份加固後的設定符合 Restricted。</p>
+  <figure class="fig">
+    <div class="tblw" style="margin:0"><table class="matrix">
+      <tr><th>設定 ＼ 等級</th><th>Privileged<br>（不限制）</th><th>Baseline<br>（基本）</th><th>Restricted<br>（嚴格）</th></tr>
+      <tr><td>特權容器（privileged: true）</td><td class="y">✔</td><td>✖</td><td>✖</td></tr>
+      <tr><td>使用 Node 的網路或資料夾（hostNetwork／hostPath）</td><td class="y">✔</td><td>✖</td><td>✖</td></tr>
+      <tr><td>以 root 身分執行</td><td class="y">✔</td><td class="y">✔</td><td>✖</td></tr>
+      <tr><td>允許權限提升（allowPrivilegeEscalation）</td><td class="y">✔</td><td class="y">✔</td><td>✖</td></tr>
+      <tr><td>保留預設 Linux 特權（沒有 drop ALL）</td><td class="y">✔</td><td class="y">✔</td><td>✖</td></tr>
+    </table></div>
+    <figcaption>三個等級是越來越嚴格的門檻：一般應用的 Namespace 至少用 Baseline，目標是 Restricted</figcaption>
+  </figure>
+<pre class="code" data-lang="yaml" data-file="namespace.yaml"><code>apiVersion: v1
+kind: Namespace
+metadata:
+  name: lab-account
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/audit: restricted</code></pre>
+  <div class="yg"><div class="yg-h">📖 逐欄位說明：Namespace 的 Pod Security 標籤</div><dl>
+    <dt>metadata.labels</dt><dd>Pod Security Admission 讀取 Namespace 上的標籤來決定怎麼檢查。標籤格式是 <code>pod-security.kubernetes.io/&lt;模式&gt;: &lt;等級&gt;</code>。</dd>
+    <dt class="i1">enforce: baseline</dt><dd><b>強制</b>模式：違反 Baseline 的 Pod 直接被拒絕建立。</dd>
+    <dt class="i1">warn: restricted</dt><dd><b>警告</b>模式：違反 Restricted 的設定仍然允許，但 <code>kubectl apply</code> 時會顯示警告訊息，提醒團隊改善。</dd>
+    <dt class="i1">audit: restricted</dt><dd><b>稽核</b>模式：仍然允許，但寫進 API Server 的稽核紀錄，讓平台團隊統計有多少服務還沒達標。</dd>
+    <dd class="yg-note">💡 常見導入順序：先用 warn 與 audit 觀察，修好之後再把 enforce 提高。想先預覽影響範圍，可以執行 <code>kubectl label --dry-run=server --overwrite ns lab-account pod-security.kubernetes.io/enforce=restricted</code>，K8s 會列出目前會違反規則的 Pod，但不會真的套用。</dd>
+  </dl></div>
+  <div class="call warn"><b class="t">enforce 只檢查 Pod</b>Deployment 本身會建立成功，但 ReplicaSet 建立的 Pod 會被拒絕。症狀是 Deployment 的 READY 一直是 <code>0/3</code>，<code>kubectl get pods</code> 卻什麼都沒有。這時要用 <code>kubectl describe replicaset</code> 或 <code>kubectl get events</code> 才看得到被拒絕的原因。</div>
+  <div class="call note"><b class="t">組織自己的規則：Policy Engine</b>Pod Security Standards 只檢查 Pod 的安全欄位。像「Image 只能來自公司的 ECR」「不能使用 latest 標籤（第 7 堂）」「每個容器都要寫 resources」這類組織自訂規則，需要 Kyverno 或 OPA Gatekeeper 這類政策引擎（Policy Engine），在資源建立時自動檢查。</div>
+
+  <h3>8. 密碼從哪裡來？External Secrets 與 AWS Secrets Manager</h3>
+  <div class="defs">
+    <div class="def"><b>AWS Secrets Manager</b>AWS 的密碼保管服務：加密儲存、記錄每一次讀取、可以設定定期自動更換密碼。</div>
+    <div class="def"><b>External Secrets Operator（ESO）</b>安裝在叢集裡的 Controller。它依照你寫的 ExternalSecret 描述，定期從外部密碼服務讀取值，自動建立或更新對應的 K8s Secret。</div>
+    <div class="def"><b>Secret Rotation（密碼輪替）</b>定期更換密碼，即使舊密碼外洩，能被濫用的時間也有限。</div>
+  </div>
+  <p class="lead">第 5 堂提過，K8s Secret 只是 Base64 編碼，而且絕對不能把真正的密碼提交到 Git。但在第 7 堂的 GitOps 流程中，所有設定都放在 Git 裡，密碼要放哪裡？如果每次都由人手動 <code>kubectl create secret</code>，密碼會散落在工程師的電腦與指令紀錄裡，也很難定期更換。常見的做法是把密碼統一存放在 AWS Secrets Manager，再由叢集裡的 External Secrets Operator 自動同步成 K8s Secret。Git 裡只放「要去哪裡拿哪一個密碼」的描述，不放密碼本身。</p>
+<p class="look"><b>看圖重點：</b>Git 與 Argo CD 只經手左側的 ExternalSecret「描述」；真正的密碼只在紫色的 Secrets Manager 與橘色的 K8s Secret 之間流動。ESO 讀取 Secrets Manager 的權限，來自第 5 堂的 Pod Identity。</p>
+  <figure class="fig">
+<pre class="mermaid">
+flowchart LR
+    G["📁 Git<br/>ExternalSecret（只有描述）"] -->|"Argo CD 同步"| ES["ExternalSecret 資源"]
+    ESO["External Secrets Operator"] -->|"讀取描述"| ES
+    ESO -->|"Pod Identity 權限<br/>定期讀取"| SM["🔐 AWS Secrets Manager<br/>prod/payment/db"]
+    ESO -->|"建立／更新"| S["K8s Secret<br/>payment-db"]
+    S -->|"環境變數或檔案"| P["Payment Pod"]
+    style SM fill:#efeafd,stroke:#7048e8,color:#4c2fb0
+    style S fill:#fff1e6,stroke:#e8590c,color:#7a2e00
+</pre>
+    <figcaption>密碼只存在 Secrets Manager，Git 裡只有「去哪裡拿」的描述；ESO 負責把兩者接起來</figcaption>
+  </figure>
+<pre class="code" data-lang="yaml" data-file="external-secret.yaml"><code>apiVersion: external-secrets.io/v1
+kind: SecretStore
+metadata:
+  name: aws-secrets
+  namespace: lab-payment
+spec:
+  provider:
+    aws:
+      service: SecretsManager
+      region: ap-northeast-1
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: payment-db
+  namespace: lab-payment
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secrets
+    kind: SecretStore
+  target:
+    name: payment-db              # 要建立的 K8s Secret 名稱
+  data:
+    - secretKey: DB_PASSWORD      # K8s Secret 裡的 Key
+      remoteRef:
+        key: prod/payment/db      # Secrets Manager 裡的密碼名稱
+        property: password        # 密碼內容是 JSON 時，取其中一個欄位</code></pre>
+  <div class="yg"><div class="yg-h">📖 逐欄位說明：external-secret.yaml（兩份資源，用 --- 分隔）</div><dl>
+    <dt>apiVersion: external-secrets.io/v1</dt><dd>這兩種資源是安裝 ESO 時新增的 CRD（自訂資源）。較舊版本的 ESO 使用 <code>v1beta1</code>，請依叢集安裝的版本調整。</dd>
+    <dt>kind: SecretStore</dt><dd>描述「去哪裡拿密碼」：哪一種外部服務、哪個 Region。它屬於 <code>lab-payment</code> Namespace，只有同一個 Namespace 的 ExternalSecret 能使用。</dd>
+    <dt class="i1">spec.provider.aws</dt><dd>使用 AWS 的密碼服務。<code>service: SecretsManager</code> 指定 Secrets Manager（也支援 Parameter Store）。</dd>
+    <dt class="i2">region</dt><dd>密碼存放在哪個 AWS Region。這裡沒有寫認證方式，ESO 會使用自己的 ServiceAccount 透過 Pod Identity 取得的權限。</dd>
+    <dt>kind: ExternalSecret</dt><dd>描述「要拿哪個密碼、做成什麼樣的 K8s Secret」。</dd>
+    <dt class="i1">refreshInterval: 1h</dt><dd>每隔多久重新讀取一次。Secrets Manager 裡的密碼更換後，最多 1 小時內 K8s Secret 就會更新。</dd>
+    <dt class="i1">secretStoreRef</dt><dd>使用哪一個 SecretStore（上面那份）。</dd>
+    <dt class="i1">target.name</dt><dd>ESO 會建立並維護的 K8s Secret 名稱。Pod 照第 5 堂的方式用 <code>secretKeyRef</code> 引用它即可。</dd>
+    <dt class="i1">data</dt><dd>要同步的項目清單。</dd>
+    <dt class="i2">secretKey</dt><dd>放進 K8s Secret 時用的 Key 名稱。</dd>
+    <dt class="i2">remoteRef.key</dt><dd>Secrets Manager 裡的密碼名稱。</dd>
+    <dt class="i2">remoteRef.property</dt><dd>Secrets Manager 的密碼常存成 JSON（例如 <code>{"username": "...", "password": "..."}</code>），用它指定取出哪一個欄位。</dd>
+    <dd class="yg-note">💡 記憶法：SecretStore 是「保險箱的地址」，ExternalSecret 是「領取單」：去哪個保險箱、拿哪一格、放進哪個 K8s Secret。</dd>
+  </dl></div>
+<pre class="code" data-lang="bash"><code>kubectl get externalsecret -n lab-payment        # STATUS 顯示 SecretSynced、READY 為 True 代表同步成功
+kubectl get secret payment-db -n lab-payment     # ESO 建立的 K8s Secret</code></pre>
+  <div class="call warn"><b class="t">同步之後，仍然是 K8s Secret</b>誰能讀這個 Namespace 的 Secret，依然由第 2 節的 RBAC 決定。多團隊共用叢集時，也要讓每個團隊的 SecretStore 只拿得到自己團隊的密碼（不同的 IAM 權限），避免 Account 團隊透過 ESO 讀到 Payment 的密碼。</div>
+  <div class="call note"><b class="t">密碼換了，Pod 會自動拿到新值嗎？</b>ESO 會更新 K8s Secret，但以環境變數注入的值不會自動改變，這和第 5 堂 ConfigMap 的原則相同，需要重啟 Pod（例如 <code>kubectl rollout restart</code>，或用 Reloader 這類工具自動處理）。如果不希望密碼以 K8s Secret 的形式存在，也可以改用 Secrets Store CSI Driver，把密碼直接掛載成 Pod 裡的檔案。</div>
+
+  <h3>9. 把所有安全機制疊起來看</h3>
   <p class="lead">把這堂課的所有機制疊在一起看，就是多租戶平台的完整防護。資安領域把這種做法稱為「縱深防禦」：不依賴任何單一機制，而是每一層各自擋住一類風險，即使某一層出了漏洞，其他層仍然有效。</p>
 <p class="look"><b>看圖重點：</b>由上到下大致是從「人的操作」到「程式的行為」再到「資源用量」。導入時通常也照這個順序：先設好 RBAC，再逐步加上網路與資源限制。</p>
   <figure class="fig">
@@ -3916,6 +4219,8 @@ spec:
       <div class="layer os">🚪 allowedRoutes／ReferenceGrant：誰能掛入口、引用後端</div>
       <div class="layer rt">🔌 NetworkPolicy：Pod 之間能不能連線</div>
       <div class="layer app">☁️ IAM + Pod Identity：Pod 能用哪些 AWS 資源</div>
+      <div class="layer">🛡️ securityContext／Pod Security：容器被入侵後能做多少事</div>
+      <div class="layer hv">🔑 External Secrets：密碼存在哪裡、由誰讀取</div>
       <div class="layer">📊 ResourceQuota／LimitRange：能用多少資源</div>
     </div>
     <figcaption>K8s 安全不是建一個 Namespace 就完成，而是多層機制的組合（縱深防禦）</figcaption>
@@ -3925,13 +4230,16 @@ kubectl get networkpolicy -A
 kubectl get resourcequota,limitrange -A
 kubectl get gateway,httproute,referencegrant -A
 kubectl get serviceaccount -A
+kubectl get ns -L pod-security.kubernetes.io/enforce
+kubectl get externalsecret -A
 aws eks list-pod-identity-associations --cluster-name YOUR_CLUSTER_NAME</code></pre>
   <div class="call note">查到 NetworkPolicy 或 RBAC 不代表安全一定符合預期：可能有額外的 ClusterRoleBinding、EKS Access Policy、CNI 沒有執行 Policy、開發者能建立使用高權限 ServiceAccount 的 Pod……企業級安全需要<b>實際做存取測試</b>。</div>
   <div class="recap"><h4>🎒 第 12 堂重點回顧</h4><ul>
     <li><b>Namespace 不是防火牆</b>，也不是完整安全邊界。</li>
     <li>RBAC 管 K8s API 操作；NetworkPolicy 管 Pod 網路；allowedRoutes／ReferenceGrant 管 Gateway 授權；IAM 管 AWS 權限；ResourceQuota 管資源量。</li>
-    <li><b>一個機制無法取代另一個</b>，要組合使用並實際測試。</li></ul></div>
+    <li><b>securityContext</b> 縮小容器被入侵後的破壞範圍；<b>Pod Security Admission</b> 在 Namespace 層級強制最低標準。</li><li>密碼集中放在 <b>AWS Secrets Manager</b>，由 <b>External Secrets Operator</b> 同步成 K8s Secret，Git 裡只有描述。</li><li><b>一個機制無法取代另一個</b>，要組合使用並實際測試。</li></ul></div>
   <details class="q"><summary>自我檢查：RBAC 已禁止 Account Team 讀 Payment Namespace，Account Pod 還能 curl Payment Service 嗎？</summary>可能可以。RBAC 不管 Pod 網路連線，需要 NetworkPolicy（且 CNI 有實作）才能阻擋。</details>
+  <details class="q"><summary>自我檢查：Namespace 設了 enforce: restricted 後，Deployment 建立成功，為什麼 READY 一直是 0/3？</summary>Pod Security Admission 只在建立 Pod 時檢查。Deployment 與 ReplicaSet 都建立成功了，但 ReplicaSet 建立的 Pod 不符合 Restricted 而被拒絕。用 <code>kubectl describe replicaset</code> 或 <code>kubectl get events</code> 就能看到被拒絕的原因。</details>
 </section>
 
 <!-- ======================= L13 ======================= -->
@@ -4988,7 +5296,7 @@ flowchart LR
 
 <!-- ======================= 結業 ======================= -->
 <section class="lesson" id="finish">
-  <div class="lesson-head"><div class="badge" style="background:var(--green)">🎓</div><div><h2>16 堂完成：你建立的 K8s 知識架構</h2><div class="meta">從 Lambda／Serverless 出發，一路到大型 EKS Production 架構</div></div></div>
+  <div class="lesson-head"><div class="badge" style="background:var(--green)">🎓</div><div><h2>第 1～16 堂完成：你建立的 K8s 知識架構</h2><div class="meta">從 Lambda／Serverless 出發，一路到大型 EKS Production 架構</div></div></div>
   <p class="lead">16 堂課走完，回頭看你學到的東西，其實可以整理成五個層次。每一層都建立在下面那一層之上：沒有 Container 與 Pod 的概念，就無法理解 Service 與自動擴展；沒有這些基本系統，就談不上大型入口與發布策略；而所有的設計，最終都要靠可觀測性來驗證是否如預期運作。</p>
 <p class="look"><b>看圖重點：</b>由下往上閱讀。如果你在某一層的內容感到吃力，通常代表它下面那一層還需要再複習。</p>
   <figure class="fig">
@@ -5322,6 +5630,263 @@ report-test   Complete   1/1           7s         10s    ← 手動測試成功<
   <details class="q"><summary>自我檢查：每 10 分鐘執行、但偶爾要跑 20 分鐘的同步任務，為什麼不建議用 Replace？</summary>每次執行到第 10 分鐘就會被下一次取消，只要資料量一直很大，就永遠沒有一次能完成。用 Forbid 會跳過重疊的那幾次，但每次開始的工作都能做完。</details>
 </section>
 
+<!-- ======================= 第 18 堂 ======================= -->
+<section class="lesson" id="l18">
+  <div class="lesson-head"><div class="badge">18</div><div><h2>StatefulSet 與 DaemonSet：有狀態服務與每台 Node 一份</h2><div class="meta">約 60 分鐘・在 Minikube 觀察固定身分與專屬硬碟</div></div></div>
+  <div class="goals"><b>這堂課你會學到</b><ol><li>說明為什麼 Deployment 不適合資料庫這類「有狀態」的服務</li><li>理解 StatefulSet 的保證：固定名稱、固定網路位址、專屬硬碟、依序啟動</li><li>判斷在 EKS 上該自己架資料庫，還是使用 RDS 這類代管服務</li><li>認識 DaemonSet，並找出你的叢集裡已經在跑的 DaemonSet</li></ol></div>
+
+  <h3>1. 為什麼資料庫不能直接放進 Deployment？</h3>
+  <p>第 5 堂的結論是：一般 API 是<b>無狀態</b>的，資料放在 DynamoDB 或 S3，任何一個副本都能處理任何請求，所以 Deployment 可以隨意刪除、替換、擴展 Pod。但有些服務本身就是存放資料的地方，例如自己架設的 MySQL、Redis、Kafka、Elasticsearch。它們的副本之間<b>不能互相替換</b>：每個副本存著不同的資料，彼此還要知道「誰是誰」，例如誰是負責寫入的主節點（Primary）、誰是同步資料的備援節點（Replica）。</p>
+  <div class="defs">
+    <div class="def"><b>Stateful（有狀態）</b>服務本身保存資料，每個副本的內容與角色可能不同。替換某個副本時，新副本必須接手原本的資料與身分。</div>
+    <div class="def"><b>StatefulSet</b>管理有狀態服務的 K8s 資源。和 Deployment 一樣會維持指定數量的 Pod，但每個 Pod 有固定的編號、名稱、網路位址與專屬硬碟，被替換後仍然沿用。</div>
+  </div>
+  <p class="lead">如果硬用 Deployment 跑 3 個資料庫副本，會遇到兩個問題。第一是名字：Deployment 的 Pod 名稱帶有隨機字串，每次重建都不一樣，其他副本沒辦法用固定的名字找到主節點。第二是硬碟：Deployment 的所有 Pod 共用同一份 Pod 樣板，樣板裡寫的 PVC 會被三個 Pod 搶著用。EBS 一次只能掛到一台 Node（第 5 堂），排到其他 Node 的 Pod 會卡在 <code>ContainerCreating</code>；就算都掛得上，三個資料庫程式同時寫同一份檔案也會讓資料損毀。</p>
+<p class="look"><b>看圖重點：</b>比較兩邊 Pod 的名字與硬碟。左邊的名字是隨機的，三個 Pod 指向同一個 PVC；右邊的名字依序是 -0、-1、-2，每個 Pod 有一個同編號的專屬 PVC，就算 Pod 被刪掉重建，名字和硬碟都不變。</p>
+  <figure class="fig">
+    <div class="grid2">
+      <div class="panel"><h5>Deployment</h5><div class="flow col">
+        <div class="flow"><span class="box" style="min-width:0">db-7d9f-x2kq</span><span class="box" style="min-width:0">db-7d9f-p8zn</span><span class="box" style="min-width:0">db-7d9f-r4tm</span></div>
+        <div class="arr">↓ 全部指向</div>
+        <div class="box r">同一個 PVC：data<small>EBS 只能掛到一台 Node，其他 Pod 卡住；掛得上也會互相覆寫</small></div>
+        <div class="box gray">重建後名字改變，其他副本找不到它</div></div></div>
+      <div class="panel"><h5>StatefulSet</h5><div class="flow col">
+        <div class="flow"><span class="box g" style="min-width:0">db-0</span><span class="box g" style="min-width:0">db-1</span><span class="box g" style="min-width:0">db-2</span></div>
+        <div class="arr">↓ 各自對應</div>
+        <div class="flow"><span class="box p" style="min-width:0">data-db-0</span><span class="box p" style="min-width:0">data-db-1</span><span class="box p" style="min-width:0">data-db-2</span></div>
+        <div class="box gray">db-1 被刪除重建 → 仍叫 db-1、仍掛 data-db-1</div></div></div>
+    </div>
+    <figcaption>Deployment 的 Pod 可以互相替換；StatefulSet 的 Pod 各有固定身分與專屬硬碟</figcaption>
+  </figure>
+  <div class="call ana"><b class="t">生活比喻</b>Deployment 的 Pod 像便利商店的排班店員：誰來上班都一樣，換人也沒關係。StatefulSet 的 Pod 像醫院裡有固定病床號碼的病人：1 號床的病人去做檢查回來，還是躺回 1 號床，床邊的病歷（硬碟）也還是他的。</div>
+
+  <h3>2. 固定的網路位址：Headless Service</h3>
+  <div class="defs"><div class="def"><b>Headless Service（無頭服務）</b>設定 <code>clusterIP: None</code> 的 Service。它不提供單一的虛擬 IP 來分流，而是讓 DNS 直接回傳 Pod 的位址，並為 StatefulSet 的每個 Pod 建立一個專屬的 DNS 名稱。</div></div>
+  <p class="lead">副本之間要互相溝通，就需要能「指名道姓」的網路位址。第 4 堂的一般 Service 只提供一個入口，請求會被分到任一個 Pod，這對無狀態 API 剛好，對資料庫卻不夠：應用程式的「寫入」必須送到主節點 db-0，備援節點也要連到 db-0 同步資料。Headless Service 搭配 StatefulSet，會讓每個 Pod 都有一個固定的 DNS 名稱；Pod 重建、IP 改變了，名稱仍然指向它。</p>
+<p class="look"><b>看圖重點：</b>上方的一般 Service 只有一個名字，讀取請求會被分到任一個 Pod；下方的 Headless Service 為每個 Pod 各建一個名字，格式是「Pod 名稱．Service 名稱．Namespace．svc．cluster．local」，所以寫入可以精準送到紫色的 db-0。</p>
+  <figure class="fig">
+<pre class="mermaid">
+flowchart LR
+    subgraph N["一般 Service：db-read"]
+      direction LR
+      C1["應用程式：讀取"] --> S1["db-read<br/>單一虛擬 IP"]
+      S1 --> R0["db-0"]
+      S1 --> R1["db-1"]
+      S1 --> R2["db-2"]
+    end
+    subgraph H["Headless Service：db（clusterIP: None）"]
+      direction LR
+      C2["應用程式：寫入"] --> D0["db-0.db.default.svc.cluster.local"] --> P0["db-0（主節點）"]
+      D1["db-1.db.default.svc.cluster.local"] --> P1["db-1"]
+      D2["db-2.db.default.svc.cluster.local"] --> P2["db-2"]
+    end
+    style P0 fill:#efeafd,stroke:#7048e8,color:#4c2fb0
+</pre>
+    <figcaption>一般 Service 適合「任何一個副本都可以」；Headless Service 讓你可以指定「就是要 db-0」</figcaption>
+  </figure>
+  <div class="tblw"><table><tr><th>比較項目</th><th>Deployment</th><th>StatefulSet</th></tr>
+  <tr><td>Pod 名稱</td><td>隨機字串，重建後改變</td><td>固定編號：<code>db-0</code>、<code>db-1</code>…</td></tr>
+  <tr><td>網路位址</td><td>只能透過 Service 隨機分配</td><td>每個 Pod 有固定的 DNS 名稱（搭配 Headless Service）</td></tr>
+  <tr><td>儲存</td><td>所有 Pod 共用樣板裡的同一個 Volume</td><td>每個 Pod 自動建立專屬 PVC，重建後重新掛上</td></tr>
+  <tr><td>啟動與關閉順序</td><td>同時進行</td><td>預設依編號逐一啟動、反向逐一關閉</td></tr></table></div>
+
+  <h3>3. 動手做：每個 Pod 都有自己的硬碟</h3>
+  <p>接下來在 Minikube 建立一個 StatefulSet，驗證「Pod 被刪除重建後，名字和資料都還在」。為了專注在 StatefulSet 本身，這裡不架真的資料庫，而是用很小的 <code>busybox</code> Image，在每個 Pod 的專屬硬碟裡手動寫入檔案來模擬資料。Minikube 內建預設的 StorageClass，會自動幫每個 Pod 建立硬碟（第 5 堂的動態佈建）。建立 <code>state-demo.yaml</code>：</p>
+<pre class="code" data-lang="yaml" data-file="state-demo.yaml"><code>apiVersion: v1
+kind: Service
+metadata:
+  name: state-demo
+spec:
+  clusterIP: None                # Headless Service
+  selector:
+    app: state-demo
+  ports:
+    - port: 80
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: state-demo
+spec:
+  serviceName: state-demo        # 對應上面的 Headless Service
+  replicas: 3
+  selector:
+    matchLabels:
+      app: state-demo
+  template:
+    metadata:
+      labels:
+        app: state-demo
+    spec:
+      terminationGracePeriodSeconds: 5
+      containers:
+        - name: app
+          image: busybox:1.36
+          command: ["sh", "-c", "while true; do sleep 3600; done"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+  volumeClaimTemplates:          # 每個 Pod 自動建立一個 PVC
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi</code></pre>
+  <div class="yg"><div class="yg-h">📖 逐欄位說明：state-demo.yaml（Headless Service ＋ StatefulSet）</div><dl>
+    <dt>Service：clusterIP: None</dt><dd>讓這個 Service 成為 Headless Service：不分配虛擬 IP，改為替每個 Pod 建立 DNS 名稱，例如 <code>state-demo-0.state-demo.default.svc.cluster.local</code>。</dd>
+    <dt>kind: StatefulSet</dt><dd>和 Deployment 一樣屬於 <code>apps/v1</code>，<code>replicas</code>、<code>selector</code>、<code>template</code> 的寫法也完全相同。</dd>
+    <dt class="i1">serviceName</dt><dd>這個 StatefulSet 搭配哪一個 Headless Service。Pod 的 DNS 名稱中間那一段就是它，<b>必須和 Service 名稱一致</b>。</dd>
+    <dt class="i1">replicas: 3</dt><dd>建立 3 個 Pod，名稱固定為 <code>state-demo-0</code>、<code>-1</code>、<code>-2</code>。</dd>
+    <dt class="i2">terminationGracePeriodSeconds: 5</dt><dd>這個示範用的 <code>sh</code> 不會處理 SIGTERM（第 7 堂），如果用預設的 30 秒，每次刪除 Pod 都要等滿 30 秒才會被 SIGKILL。示範時調短，正式服務不要這樣做。</dd>
+    <dt class="i2">command</dt><dd>讓 busybox 一直執行不結束（每小時醒來一次再睡），模擬一個常駐的服務。</dd>
+    <dt class="i2">volumeMounts.name: data</dt><dd>要掛載的 Volume 名稱，對應下方 <code>volumeClaimTemplates</code> 裡的名字。</dd>
+    <dt class="i1">volumeClaimTemplates</dt><dd><b>StatefulSet 獨有</b>的「PVC 樣板」。每個 Pod 都會依這個樣板建立一個自己的 PVC，名稱是「樣板名－Pod 名」，例如 <code>data-state-demo-0</code>。</dd>
+    <dt class="i2">accessModes: ["ReadWriteOnce"]</dt><dd>這顆硬碟同一時間只能被一台 Node 掛載讀寫，EBS 就是這種類型。</dd>
+    <dt class="i2">resources.requests.storage</dt><dd>每個 Pod 要多大的硬碟。</dd>
+    <dd class="yg-note">⚠️ 沒寫 <code>storageClassName</code> 時，會使用叢集的預設 StorageClass（Minikube 是 <code>standard</code>）。在 EKS 上要先確認叢集有沒有設定預設的 StorageClass；沒有的話要明確指定，例如 EBS CSI Driver 建立的 gp3 類型，否則 PVC 會一直停在 Pending。</dd>
+  </dl></div>
+  <p>套用後觀察建立順序，再寫入資料、刪除 Pod，看看資料是否還在：</p>
+<pre class="code" data-lang="bash"><code>kubectl apply -f state-demo.yaml
+kubectl get pods -l app=state-demo -w        # 觀察 0 → 1 → 2 依序建立，Ctrl+C 結束觀察
+kubectl get pvc -o custom-columns=NAME:.metadata.name,STATUS:.status.phase,SIZE:.spec.resources.requests.storage
+kubectl exec state-demo-0 -- sh -c "echo state-demo-0 的資料 > /data/hello.txt"
+kubectl delete pod state-demo-0
+kubectl get pods -l app=state-demo            # state-demo-0 重新出現，名字沒變
+kubectl exec state-demo-0 -- cat /data/hello.txt</code></pre>
+<pre class="code" data-lang="text" data-file="預期輸出"><code>NAME                STATUS   SIZE
+data-state-demo-0   Bound    1Gi      ← 每個 Pod 一個專屬 PVC
+data-state-demo-1   Bound    1Gi
+data-state-demo-2   Bound    1Gi
+
+NAME           READY   STATUS    RESTARTS   AGE
+state-demo-0   1/1     Running   0          6s       ← 剛重建，名字一樣
+state-demo-1   1/1     Running   0          2m
+state-demo-2   1/1     Running   0          2m
+
+state-demo-0 的資料                                   ← 重建後重新掛上同一顆硬碟，資料還在</code></pre>
+  <p class="lead">剛才用 <code>-w</code> 觀察時，你應該注意到 Pod 不是同時出現的。StatefulSet 預設會<b>依編號逐一建立</b>：等 -0 Ready 了才建 -1，-1 Ready 了才建 -2；縮容時則反過來，從編號最大的開始逐一關閉。這個順序對資料庫很重要：主節點（通常是 -0）要先準備好，備援節點啟動時才有對象可以同步資料。</p>
+<p class="look"><b>看圖重點：</b>前半段（虛線左邊）是建立：三個 Pod 的黃色「啟動中」階梯式地錯開。第 40 秒把 replicas 從 3 改成 1，後半段的紅色「關閉中」從 -2 開始，-2 完全結束後才輪到 -1，-0 則一直保留。</p>
+  <figure class="fig">
+    <div class="chart" data-chart="stsorder"></div>
+    <figcaption>StatefulSet 依編號逐一建立、反向逐一關閉；Deployment 則會同時建立或刪除所有 Pod</figcaption>
+  </figure>
+  <div class="call warn"><b class="t">刪除 StatefulSet 不會刪除 PVC</b>為了保護資料，<code>kubectl delete statefulset</code> 預設會留下所有 PVC 與底層的 EBS 硬碟；重新建立同名的 StatefulSet 時，會自動接回原本的硬碟。但如果真的不需要了，要記得手動刪除，否則 EBS 會一直計費。練習結束後執行：<code>kubectl delete -f state-demo.yaml</code>，再 <code>kubectl delete pvc data-state-demo-0 data-state-demo-1 data-state-demo-2</code>。</div>
+
+  <h3>4. 在 EKS 上，資料庫該自己跑嗎？</h3>
+  <p class="lead">學會 StatefulSet 之後，很自然會想：「那我就在 EKS 上自己架 MySQL 吧。」技術上可行，但 StatefulSet 只解決了「名字和硬碟」，資料庫真正困難的部分仍然要自己負責：備份與還原、主節點故障時切換、版本升級，以及 EBS 綁定單一 AZ 帶來的限制（第 14 堂）。AWS 的 RDS、Aurora、DynamoDB、ElastiCache 已經把這些工作代管了。所以多數團隊的做法是：<b>資料庫優先使用代管服務，StatefulSet 留給沒有合適代管服務、或團隊有能力維運的系統</b>。</p>
+<p class="look"><b>看圖重點：</b>每一列是一項維運工作，綠色 ✔ 代表「已經有現成的機制幫你處理」。StatefulSet 那一欄只有最上面兩列是 K8s 幫你做的，下面四列都要團隊自己想辦法。</p>
+  <figure class="fig">
+    <div class="tblw" style="margin:0"><table class="matrix">
+      <tr><th>維運工作 ＼ 方式</th><th>自己在 StatefulSet 架設</th><th>AWS 代管（RDS／Aurora）</th></tr>
+      <tr><td>固定身分與專屬硬碟</td><td class="y">✔</td><td class="y">✔</td></tr>
+      <tr><td>機器故障後自動重建</td><td class="y">✔</td><td class="y">✔</td></tr>
+      <tr><td>自動備份與還原到指定時間點</td><td>✖</td><td class="y">✔</td></tr>
+      <tr><td>主節點故障自動切換</td><td>✖</td><td class="y">✔</td></tr>
+      <tr><td>跨 AZ 的資料複寫</td><td>✖</td><td class="y">✔</td></tr>
+      <tr><td>版本升級與安全修補</td><td>✖</td><td class="y">✔</td></tr>
+    </table></div>
+    <figcaption>StatefulSet 解決的是「身分與硬碟」，不是資料庫維運；有代管服務可用時，通常是更省力的選擇</figcaption>
+  </figure>
+  <div class="call note"><b class="t">Operator 可以補上一部分</b>社群有許多專門管理特定資料庫的 Operator（在叢集裡自動執行維運工作的 Controller），例如管理 PostgreSQL 的 CloudNativePG、管理 Kafka 的 Strimzi，可以自動處理部分備份與故障切換。但安裝、升級與排查 Operator 本身也是工作。實務上常在 K8s 裡用 StatefulSet 跑的，多半是 Kafka、Elasticsearch、自建的監控系統（如 Prometheus）這類代管選項較少或成本較高的服務。</div>
+
+  <h3>5. DaemonSet：每台 Node 都要有一份</h3>
+  <div class="defs"><div class="def"><b>DaemonSet</b>確保「每一台（或符合條件的）Node 上都剛好跑一個 Pod」的資源。新 Node 加入叢集時自動補上，Node 移除時一起清掉。名稱來自 Linux 中在背景常駐的服務程式（daemon）。</div></div>
+  <p class="lead">有些程式服務的對象不是使用者的請求，而是 Node 本身：收集這台 Node 上所有容器的 Log、回報這台 Node 的 CPU 與記憶體、設定這台 Node 的網路。它們需要的不是「總共幾個副本」，而是「每台 Node 剛好一個」。用 Deployment 把 replicas 設成 Node 數量並不可靠：Karpenter 會隨時增減 Node（第 14 堂），Scheduler 也不保證每台剛好放一個。DaemonSet 直接以 Node 為單位來管理。</p>
+<p class="look"><b>看圖重點：</b>每台 Node 底部都有一個黃色的 Log Agent，它是 DaemonSet 建立的；綠色的 App Pod 則由 Deployment 依資源狀況分配，各台數量不同。最右邊是剛加入的 Node，還沒有任何 App Pod，但 DaemonSet 已經在上面補了一個 Log Agent。</p>
+  <figure class="fig">
+    <div class="flow" style="align-items:stretch">
+      <div class="zone"><div class="zl">Node 1</div><div><span class="pod">A</span><span class="pod">B</span></div><div class="box y" style="margin-top:8px">📋 Log Agent</div></div>
+      <div class="zone"><div class="zl">Node 2</div><div><span class="pod">C</span></div><div class="box y" style="margin-top:8px">📋 Log Agent</div></div>
+      <div class="zone" style="border-color:var(--purple)"><div class="zl">Node 3（剛加入）</div><div style="font-size:12.5px;color:var(--muted);min-height:50px;display:grid;place-items:center">尚無 App Pod</div><div class="box y" style="margin-top:8px">📋 Log Agent ✨<small>自動補上</small></div></div>
+    </div>
+    <figcaption>DaemonSet 以 Node 為單位：每台剛好一個，Node 增加時自動跟著增加</figcaption>
+  </figure>
+<pre class="code" data-lang="yaml" data-file="log-agent.yaml（示意）"><code>apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: log-agent
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: log-agent
+  template:
+    metadata:
+      labels:
+        app: log-agent
+    spec:
+      tolerations:
+        - operator: Exists          # 連有 Taint 的 Node 也要跑
+      containers:
+        - name: agent
+          image: fluent/fluent-bit:3.1
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { memory: 128Mi }
+          volumeMounts:
+            - name: varlog
+              mountPath: /var/log
+              readOnly: true
+      volumes:
+        - name: varlog
+          hostPath:
+            path: /var/log          # 直接讀取 Node 上的 Log 資料夾</code></pre>
+  <div class="yg"><div class="yg-h">📖 逐欄位說明：log-agent.yaml（示意設定）</div><dl>
+    <dt>kind: DaemonSet</dt><dd>同樣屬於 <code>apps/v1</code>。注意整份設定<b>沒有 <code>replicas</code></b>：數量由 Node 的數量決定。</dd>
+    <dt>metadata.namespace: kube-system</dt><dd>這類系統元件通常放在 <code>kube-system</code> 或平台團隊專用的 Namespace，和應用程式分開管理。</dd>
+    <dt class="i2">tolerations: operator Exists</dt><dd>容忍所有 Taint（第 10 堂提過，Taint 是 Node 上「一般 Pod 不要來」的標記）。Log 收集需要涵蓋每一台 Node，包括專用的 Node，所以全部容忍。</dd>
+    <dt class="i3">resources</dt><dd>DaemonSet 的資源要<b>乘以 Node 數量</b>來看：每個 Pod 50m CPU，100 台 Node 就是 5 顆 CPU，所以通常設得很小。</dd>
+    <dt class="i3">volumeMounts（readOnly）</dt><dd>把 Node 的 <code>/var/log</code> 以唯讀方式掛進容器，讓 Agent 讀取這台 Node 上所有容器的 Log。</dd>
+    <dt class="i2">volumes.hostPath</dt><dd>直接使用 Node 上的資料夾。這是很大的權限，第 12 堂的 Baseline 等級會擋掉它，所以這類系統元件會放在允許較高權限、並由平台團隊嚴格管理的 Namespace。</dd>
+    <dd class="yg-note">📌 這是示意設定，實際使用 Fluent Bit 還需要搭配設定檔（ConfigMap）與輸出目的地（例如 CloudWatch Logs）。多數團隊會直接用官方提供的 Helm Chart 或 EKS 附加元件安裝。</dd>
+  </dl></div>
+  <p>其實你的叢集裡早就有 DaemonSet 在跑了。在 Minikube 上執行：</p>
+<pre class="code" data-lang="bash"><code>kubectl get daemonset -A</code></pre>
+<pre class="code" data-lang="text" data-file="預期輸出（Minikube）"><code>NAMESPACE     NAME         DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
+kube-system   kube-proxy   1         1         1       1            1           kubernetes.io/os=linux   3d    ← Minikube 只有 1 台 Node，所以是 1</code></pre>
+  <div class="tblw"><table><tr><th>EKS 上常見的 DaemonSet</th><th>負責什麼</th></tr>
+  <tr><td><code>aws-node</code></td><td>VPC CNI：替每個 Pod 分配 VPC 裡的 IP</td></tr>
+  <tr><td><code>kube-proxy</code></td><td>在每台 Node 設定 Service 的轉送規則（第 4 堂）</td></tr>
+  <tr><td><code>ebs-csi-node</code></td><td>把 EBS 硬碟掛載到這台 Node 上的 Pod</td></tr>
+  <tr><td><code>eks-pod-identity-agent</code></td><td>提供 Pod Identity 的 AWS 臨時憑證（第 5 堂）</td></tr>
+  <tr><td>Log／監控 Agent</td><td>例如 Fluent Bit、CloudWatch Agent、Prometheus Node Exporter</td></tr>
+  <tr><td><code>ztunnel</code></td><td>Istio Ambient Mode 的每 Node 代理（第 13 堂）</td></tr></table></div>
+  <div class="call tip">實際會看到哪些 DaemonSet，取決於叢集安裝了哪些附加元件。拿到一個陌生的 EKS 叢集時，<code>kubectl get daemonset -A</code> 是快速了解「每台 Node 上都跑了什麼」的好方法。</div>
+
+  <h3>6. 總整理：五種工作負載怎麼選？</h3>
+  <p class="lead">第 17 堂最後用矩陣比較了四種資源。加上這堂的 StatefulSet 之後，改用一連串的是非題來判斷會更直覺：從最上面的問題開始，依序回答三、四個問題，就能找到該用的資源。這也是拿到一個新服務時，決定要寫哪一種 YAML 的思考順序。</p>
+<p class="look"><b>看圖重點：</b>大多數應用程式最後都會落在 Deployment。走到 StatefulSet 時，先回到第 4 節想一想有沒有代管服務可以用；走到 DaemonSet 的，通常是平台團隊負責的系統元件。</p>
+  <figure class="fig">
+<pre class="mermaid">
+flowchart TD
+    Q1{"程式會一直在線嗎？"} -->|"不會，做完就結束"| Q2{"要定時重複執行嗎？"}
+    Q2 -->|"是"| CJ["CronJob（第 17 堂）"]
+    Q2 -->|"否"| J["Job（第 17 堂）"]
+    Q1 -->|"會"| Q3{"每台 Node 都要一份？"}
+    Q3 -->|"是"| DS["DaemonSet"]
+    Q3 -->|"否"| Q4{"副本需要固定身分<br/>或各自的資料？"}
+    Q4 -->|"是"| SS["StatefulSet<br/>（先考慮代管服務）"]
+    Q4 -->|"否"| D["Deployment（第 3 堂）"]
+    style D fill:#e3f6ea,stroke:#12a150,color:#0b5d2e
+    style SS fill:#efeafd,stroke:#7048e8,color:#4c2fb0
+</pre>
+    <figcaption>四個是非題選出工作負載：大多數服務是 Deployment，有狀態才考慮 StatefulSet，Node 層級用 DaemonSet</figcaption>
+  </figure>
+
+  <div class="recap"><h4>🎒 第 18 堂重點回顧</h4><ul>
+    <li><b>StatefulSet</b> 給每個 Pod 固定的編號、名稱、DNS 名稱與專屬 PVC，被替換後仍然沿用；預設依編號逐一建立、反向逐一關閉。</li>
+    <li><b>Headless Service</b>（<code>clusterIP: None</code>）讓每個 Pod 都有可以指名的 DNS 名稱。</li>
+    <li><code>volumeClaimTemplates</code> 為每個 Pod 建立專屬 PVC；刪除 StatefulSet 不會刪除 PVC，用不到時要手動清除。</li>
+    <li>在 EKS 上，資料庫<b>優先使用代管服務</b>；StatefulSet 留給沒有合適代管服務的系統。</li>
+    <li><b>DaemonSet</b> 讓每台 Node 剛好一個 Pod，適合 Log、監控、網路這類 Node 層級的元件；資源用量要乘以 Node 數量來估算。</li></ul>
+  <p style="margin:8px 0 0">練習結束後，記得刪除 StatefulSet 與三個 PVC（見第 3 節的提醒）。</p></div>
+  <details class="q"><summary>自我檢查：state-demo-1 被刪除後，新建的 Pod 會叫什麼名字？會掛到哪一顆硬碟？</summary>仍然叫 <code>state-demo-1</code>，並重新掛上 <code>data-state-demo-1</code>，所以原本的資料都還在。這正是 StatefulSet 和 Deployment 最大的差別。</details>
+  <details class="q"><summary>自我檢查：為什麼 Log 收集程式適合用 DaemonSet，而不是把 replicas 設成 Node 數量的 Deployment？</summary>Deployment 不保證每台 Node 剛好一個，Scheduler 可能把兩個放在同一台；而且 Node 數量會被 Karpenter 隨時調整，replicas 跟不上。DaemonSet 直接以 Node 為單位，新 Node 加入就自動補上。</details>
+  <details class="q"><summary>自我檢查：刪掉 StatefulSet 後再用同一份 YAML 建立，資料還在嗎？</summary>在。刪除 StatefulSet 預設不會刪除 PVC，重新建立同名的 StatefulSet 時，<code>state-demo-0</code> 會依名稱接回 <code>data-state-demo-0</code>。</details>
+</section>
+
 <div class="part-title"><h2>附錄</h2><p>隨時回來查：常用指令、故障速查、名詞辭典</p></div>
 
 <!-- ======================= 附錄 A ======================= -->
@@ -5535,6 +6100,26 @@ flowchart TD
     <div class="def"><b>Idempotent（冪等）</b>執行一次或多次結果都相同的特性。<i>第 17 堂</i></div>
     <div class="def"><b>Cron 表示式</b>「分 時 日 月 星期」五個欄位組成的時間表語法。<i>第 17 堂</i></div>
     <div class="def"><b>concurrencyPolicy</b>CronJob 遇到上一次還沒跑完時的處理方式：Allow／Forbid／Replace。<i>第 17 堂</i></div>
+  </div>
+  <h3 class="gh">補充：Pod 生命週期、安全與有狀態服務</h3>
+  <div class="defs g">
+    <div class="def"><b>Init Container（初始化容器）</b>主程式啟動前依序執行、必須成功結束的 Container。<i>第 3 堂</i></div>
+    <div class="def"><b>startupProbe（啟動探針）</b>給慢啟動程式的啟動檢查，成功前暫停另外兩種探針。<i>第 6 堂</i></div>
+    <div class="def"><b>SIGTERM／SIGKILL</b>「請準備結束」／「立刻結束」訊號。<i>第 7 堂</i></div>
+    <div class="def"><b>Graceful Shutdown（優雅關閉）</b>收到 SIGTERM 後處理完手上的請求再結束。<i>第 7 堂</i></div>
+    <div class="def"><b>preStop</b>送出 SIGTERM 前先執行的掛鉤，常用來等待名單更新。<i>第 7 堂</i></div>
+    <div class="def"><b>terminationGracePeriodSeconds</b>Pod 關閉的總寬限時間，預設 30 秒。<i>第 7 堂</i></div>
+    <div class="def"><b>securityContext（安全情境）</b>設定執行身分、權限提升、唯讀檔案系統、Linux 特權。<i>第 12 堂</i></div>
+    <div class="def"><b>Linux Capabilities（Linux 特權）</b>root 權限拆成的細項，一般 API 應該全部移除。<i>第 12 堂</i></div>
+    <div class="def"><b>Pod Security Standards</b>官方三個安全等級：Privileged、Baseline、Restricted。<i>第 12 堂</i></div>
+    <div class="def"><b>Pod Security Admission</b>依 Namespace 標籤檢查 Pod 安全等級的內建機制。<i>第 12 堂</i></div>
+    <div class="def"><b>Policy Engine（政策引擎）</b>如 Kyverno、OPA Gatekeeper，檢查組織自訂規則。<i>第 12 堂</i></div>
+    <div class="def"><b>AWS Secrets Manager</b>AWS 的密碼保管服務，支援存取紀錄與自動輪替。<i>第 12 堂</i></div>
+    <div class="def"><b>External Secrets Operator（ESO）</b>把外部密碼服務的值同步成 K8s Secret 的 Controller。<i>第 12 堂</i></div>
+    <div class="def"><b>Stateful（有狀態）</b>服務本身保存資料，副本之間不能互相替換。<i>第 18 堂</i></div>
+    <div class="def"><b>StatefulSet</b>給每個 Pod 固定名稱、DNS 與專屬硬碟的工作負載資源。<i>第 18 堂</i></div>
+    <div class="def"><b>Headless Service（無頭服務）</b><code>clusterIP: None</code>，為每個 Pod 建立 DNS 名稱。<i>第 18 堂</i></div>
+    <div class="def"><b>volumeClaimTemplates</b>StatefulSet 的 PVC 樣板，每個 Pod 建立一個專屬 PVC。<i>第 18 堂</i></div>
   </div>
   <p id="gnone" style="display:none;color:var(--muted)">找不到符合的名詞。</p>
 </section>
@@ -5843,6 +6428,48 @@ flowchart TD
         b+=L(x0,268,x1,268,V('muted'),{w:1.2});
         [0,10,20,30,40].forEach(t=>b+=T(X(t),284,t,{fs:11,c:V('muted')}));
         b+=T((x0+x1)/2,298,'時間（分鐘）・每 10 分鐘排程一次，每次工作需要 15 分鐘',{fs:12,c:V('muted')});
+        return S(W,H,b);
+      },
+      /* L7：優雅關閉的時間軸（有無 preStop） */
+      shutdown(){
+        const W=680,H=272,x0=130,x1=660,X=t=>x0+t/35*(x1-x0);
+        let b=R(x0,8,22,12,V('muted'),{rx:3,op:.25})+T(x0+30,18,'仍有新請求被送進來',{a:'start',fs:12});
+        b+=L(x0+190,14,x0+212,14,V('red'),{w:2.5,d:'6 4'})+T(x0+220,18,'寬限時間到 → SIGKILL',{a:'start',fs:12});
+        b+=L(X(5),34,X(5),222,V('accent'),{w:1.5,d:'3 3'})+T(X(5)+4,42,'名單更新完成（約 5 秒）',{a:'start',fs:11,b:1,c:V('accent')});
+        b+=L(X(30),34,X(30),222,V('red'),{w:2,d:'6 4'});
+        const bar=(a,z,y,c,label)=>R(X(a),y,X(z)-X(a),26,V(c),{rx:4,op:.35,s:V(c)})+T((X(a)+X(z))/2,y+17,label,{fs:11});
+        // 沒有 preStop
+        b+=T(x0-12,94,'沒有 preStop',{a:'end',fs:13.5,b:1})+T(x0-12,111,'SIGTERM 在第 0 秒',{a:'end',fs:11,c:V('muted')});
+        b+=R(X(0),52,X(5)-X(0),74,V('muted'),{op:.18});
+        b+=bar(0,5,58,'red','✖ 新請求失敗')+bar(0,5,92,'orange','收尾中');
+        b+=T(X(5)+8,109,'程式在第 5 秒結束，但之前的新請求都落空了',{a:'start',fs:11.5,c:V('red'),b:1});
+        b+=L(x0-110,138,x1,138,V('line'),{w:1,d:'4 4'});
+        // 有 preStop
+        b+=T(x0-12,184,'preStop 10 秒',{a:'end',fs:13.5,b:1})+T(x0-12,201,'SIGTERM 在第 10 秒',{a:'end',fs:11,c:V('muted')});
+        b+=R(X(0),150,X(5)-X(0),66,V('muted'),{op:.18});
+        b+=bar(0,10,156,'green','照常服務')+bar(10,15,186,'orange','收尾中');
+        b+=T(X(15)+8,203,'第 15 秒結束 ✅ 沒有請求落空',{a:'start',fs:11.5,c:V('green'),b:1});
+        b+=L(x0,232,x1,232,V('muted'),{w:1.2});
+        [0,5,10,15,20,25,30,35].forEach(t=>b+=T(X(t),248,t,{fs:11,c:V('muted')}));
+        b+=T((x0+x1)/2,268,'從 Pod 開始關閉起算的時間（秒）',{fs:12,c:V('muted')});
+        return S(W,H,b);
+      },
+      /* L18：StatefulSet 依序建立、反向縮容 */
+      stsorder(){
+        const W=680,H=232,x0=130,x1=660,X=t=>x0+t/60*(x1-x0);
+        let b=T(X(13),22,'依編號逐一建立',{fs:12,b:1,c:V('accent')})+T(X(51),22,'replicas 3 → 1：反向逐一關閉',{fs:12,b:1,c:V('red')});
+        b+=L(X(40),30,X(40),176,V('muted'),{w:1.5,d:'4 4'});
+        const seg=(a,z,y,c,label)=>R(X(a),y,X(z)-X(a),26,V(c),{rx:4,op:.38,s:V(c)})+(label?T((X(a)+X(z))/2,y+17,label,{fs:11}):'');
+        const rows=[
+          {n:'state-demo-0',y:40,s:[[0,8,'yellow','啟動中'],[8,60,'green','Running']]},
+          {n:'state-demo-1',y:86,s:[[8,16,'yellow','啟動中'],[16,44,'green','Running'],[44,48,'red','關閉']]},
+          {n:'state-demo-2',y:132,s:[[16,24,'yellow','啟動中'],[24,40,'green','Running'],[40,44,'red','關閉']]}];
+        rows.forEach(r=>{b+=T(x0-12,r.y+17,r.n,{a:'end',fs:12.5,b:1});r.s.forEach(s=>b+=seg(s[0],s[1],r.y,s[2],X(s[1])-X(s[0])>36?s[3]:''));});
+        b+=L(X(8),66,X(8),86,V('accent'),{w:1.5,d:'3 3'})+T(X(8)+4,80,'-0 Ready 後才建 -1',{a:'start',fs:10.5,c:V('accent')});
+        b+=L(X(16),112,X(16),132,V('accent'),{w:1.5,d:'3 3'})+T(X(16)+4,126,'-1 Ready 後才建 -2',{a:'start',fs:10.5,c:V('accent')});
+        b+=L(x0,186,x1,186,V('muted'),{w:1.2});
+        [0,10,20,30,40,50,60].forEach(t=>b+=T(X(t),202,t,{fs:11,c:V('muted')}));
+        b+=T((x0+x1)/2,226,'時間（秒，示意值）',{fs:12,c:V('muted')});
         return S(W,H,b);
       }
     };
