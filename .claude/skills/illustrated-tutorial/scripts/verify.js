@@ -27,6 +27,10 @@
   // 4. Code blocks without IDE chrome, and YAML blocks (> 3 lines) without a field guide.
   //    Review the list: short syntax demos or fragments already explained in prose are acceptable.
   const rawCode = $$('pre.code').filter(p => !p.closest('.ide')).length;
+  // Non-terminal blocks whose tab label falls back to a generic default instead of matching the prose
+  const noFileTab = $$('pre.code').filter(p => !['bash', 'powershell', 'sh'].includes(p.dataset.lang) && !p.dataset.file &&
+    !/#\s*[\w.\-\/]+\.(?:ya?ml|py|txt|json|sh)\b/.test(p.textContent.split('\n')[0]))
+    .map(p => (p.dataset.lang || 'text') + ': ' + p.textContent.split('\n')[0].slice(0, 40));
   const yamlNoGuide = $$('pre.code[data-lang="yaml"]').filter(p => {
     const ide = p.closest('.ide'); if (!ide || ide.closest('.widget')) return false;
     if (p.textContent.trim().split('\n').length <= 3) return false;
@@ -68,7 +72,7 @@
     counts: { figures: $$('figure.fig').length, mermaid: $$('pre.mermaid').length, charts: $$('.chart').length,
       leads: $$('p.lead').length, looks: $$('p.look').length, codeBlocks: $$('pre.code').length,
       yamlGuides: $$('.yg').length, widgets: $$('.widget').length, termCards: $$('.def').length },
-    mermaidErrors, emptyCharts, figuresWithoutLead: noLead, rawCode, yamlWithoutGuide: yamlNoGuide,
+    mermaidErrors, emptyCharts, figuresWithoutLead: noLead, rawCode, codeWithoutFileTab: noFileTab, yamlWithoutGuide: yamlNoGuide,
     lowContrastText: [...new Set(lowContrast)].slice(0, 30), overflowX, narrowTermCards: narrowDefs
   }, null, 1);
 })();

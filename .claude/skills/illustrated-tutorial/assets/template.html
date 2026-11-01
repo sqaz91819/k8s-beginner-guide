@@ -493,7 +493,7 @@ lbctl get targets --name web-lb</code></pre>
   /* ---------- code blocks：IDE 外框 + 語法高亮 + 行號 ---------- */
   const hasHL=typeof hljs!=='undefined'; if(hasHL) hljs.configure({ignoreUnescapedHTML:true});
   const langMap={text:'plaintext',promql:'plaintext',sh:'bash'};
-  const tabName={bash:'終端機 — bash',powershell:'Windows PowerShell',yaml:'config.yaml',python:'main.py',dockerfile:'Dockerfile',json:'data.json',text:'output.txt',promql:'query.promql'};
+  const tabName={bash:'終端機 — bash',powershell:'Windows PowerShell',yaml:'YAML 片段',python:'Python 程式',dockerfile:'Dockerfile',json:'JSON',text:'預期輸出',promql:'PromQL 查詢'};
   // 把 hljs 沒有上色的「純文字片段」再做補強：指令、參數、佔位符、輸出表頭、# 註解
   function decorate(code,rule){
     let atStart=true;

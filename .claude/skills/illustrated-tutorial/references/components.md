@@ -70,7 +70,13 @@ Always end with `<figcaption>結論句</figcaption>`. Numbering is automatic.
 kind: Deployment</code></pre>
 ```
 - `data-lang`: `yaml`, `bash`, `powershell`, `python`, `dockerfile`, `json`, `text` (output / plain), `promql`.
-- `data-file`: tab label. If omitted, a first-line comment like `# app.py` is used, else a default per language (`終端機 — bash`, `config.yaml`, …).
+- `data-file`: tab label. **Set it on every non-terminal block**, and make it match the prose around the block:
+  - the prose says "建立 service.yaml" → `data-file="service.yaml"`
+  - a fragment of a file the reader already has → `data-file="deployment.yaml（env 片段）"`
+  - a standalone example the lesson never names as a file → describe it: `data-file="NetworkPolicy 範例"`
+  - command output → `data-file="預期輸出"`; directory trees → `data-file="專案結構"`
+
+  If omitted, a first-line comment like `# app.py` is used, else a neutral default per language (`終端機 — bash`, `YAML 片段`, `預期輸出`, …). Never invent a filename such as `config.yaml` that the text does not mention: a reader told to edit `deployment.yaml` who sees a tab named `config.yaml` will assume they are editing the wrong file.
 - Escape `<`, `>`, `&` inside code (`&lt;名稱&gt;`). Write no leading newline after `<code>`.
 - Highlighting is automatic (highlight.js + custom decoration: commands, `--flags`, `<placeholders>`, output table headers, `# comments`, `← notes`). Manual spans `<span class="k">` (keyword), `<span class="c">` (comment), `<span class="s">` (string) are also styled, if you need to force them.
 - The runtime wraps each block in the IDE frame (traffic-light dots, tab, language tag, copy button, line gutter).

@@ -346,7 +346,7 @@ flowchart LR
 
   <h3>1. 傳統部署：直接把程式放到伺服器</h3>
   <p>假設你寫了一個很簡單的 Python API（用 <span class="term" tabindex="0" data-tip="Python 的輕量級 Web 框架，幾行程式就能做出 HTTP API。">Flask</span> 框架）：</p>
-<pre class="code" data-lang="python"><code><span class="k">from</span> flask <span class="k">import</span> Flask
+<pre class="code" data-lang="python" data-file="app.py（最簡版）"><code><span class="k">from</span> flask <span class="k">import</span> Flask
 app = Flask(__name__)
 
 @app.route(<span class="s">"/"</span>)
@@ -425,7 +425,7 @@ app.run(host=<span class="s">"0.0.0.0"</span>, port=8080)</code></pre>
     </div>
     <figcaption>Dockerfile → Image → Container：一份 Image 可以同時啟動很多個 Container</figcaption>
   </figure>
-<pre class="code" data-lang="dockerfile"><code><span class="k">FROM</span> python:3.12-slim        <span class="c"># 使用 Python 3.12 的基礎環境</span>
+<pre class="code" data-lang="dockerfile" data-file="Dockerfile"><code><span class="k">FROM</span> python:3.12-slim        <span class="c"># 使用 Python 3.12 的基礎環境</span>
 <span class="k">WORKDIR</span> /app                 <span class="c"># 工作目錄設為 /app</span>
 <span class="k">COPY</span> . .                     <span class="c"># 把程式碼複製進去</span>
 <span class="k">RUN</span> pip install flask        <span class="c"># 安裝 Flask（建置時執行）</span>
@@ -484,7 +484,7 @@ flowchart TB
 
   <h3>6. Kubernetes 最重要的觀念：Desired State（期望狀態）</h3>
   <p>傳統做法是你自己寫程式檢查：「如果健康的伺服器少於 3 台，就再開一台」。Kubernetes 則是你只要<b>宣告</b>想要的結果：</p>
-<pre class="code" data-lang="yaml"><code>replicas: 3   <span class="c"># 我希望這個應用程式永遠維持 3 個副本</span></code></pre>
+<pre class="code" data-lang="yaml" data-file="期望狀態（概念示意）"><code>replicas: 3   <span class="c"># 我希望這個應用程式永遠維持 3 個副本</span></code></pre>
   <p>K8s 會<b>不停地</b>比對「期望狀態」和「實際狀態」，有差距就自動補上。這個持續比對、修正的機制叫做 <span class="term" tabindex="0" data-tip="Control Loop：不斷重複「觀察現況 → 和目標比較 → 採取行動」的迴圈。K8s 內建大量這種迴圈（Controller）。">控制迴圈（Control Loop）</span>。</p>
   <p class="lead">「宣告期望狀態」聽起來只是換個寫法，真正的威力在於它是<b>持續</b>的。K8s 不是收到命令後執行一次就結束，而是每時每刻都在比對：現在有幾個 Pod？跟你要的一樣嗎？少了就補、多了就刪。所以 Pod 半夜當掉、某台機器重開，你都不需要介入。要注意的是，迴圈只能修正它「看得到」的差異，例如 Pod 數量；程式邏輯錯誤它是無能為力的。</p>
 <p class="look"><b>看圖重點：</b>這是一個沒有終點的圓圈。後面會學到的 Deployment、HPA、Argo Rollouts，本質上都是這種迴圈，只是比對的對象不同。</p>
@@ -673,7 +673,7 @@ code .    <span class="c"># 用 VS Code 開啟（選用）</span></code></pre>
   <figure class="fig">
     <div class="grid2">
       <div class="panel"><h5>📁 專案結構</h5>
-<pre class="code" data-lang="text" style="margin:0"><code>python-api/
+<pre class="code" data-lang="text" data-file="專案結構" style="margin:0"><code>python-api/
 ├── app.py            <span class="c"># API 程式</span>
 ├── requirements.txt  <span class="c"># 需要的套件</span>
 ├── Dockerfile        <span class="c"># 製作說明書</span>
@@ -762,7 +762,7 @@ flowchart LR
   python-api:v1
 
 curl http://localhost:8080/</code></pre>
-<pre class="code" data-lang="json"><code>{ <span class="s">"message"</span>: <span class="s">"Hello from Docker!"</span>, <span class="s">"hostname"</span>: <span class="s">"a1b2c3d4e5f6"</span>, <span class="s">"environment"</span>: <span class="s">"local"</span> }</code></pre>
+<pre class="code" data-lang="json" data-file="curl 回應（JSON）"><code>{ <span class="s">"message"</span>: <span class="s">"Hello from Docker!"</span>, <span class="s">"hostname"</span>: <span class="s">"a1b2c3d4e5f6"</span>, <span class="s">"environment"</span>: <span class="s">"local"</span> }</code></pre>
   <ul><li><b>hostname 為什麼不是你的電腦名稱？</b>因為 Container 有自己的主機名稱（預設常是 Container ID 縮寫），證明程式真的在 Container 裡執行。</li>
   <li><b>environment 為什麼是 local？</b>因為 <code>-e APP_ENV=local</code> 傳入了<span class="term" tabindex="0" data-tip="Environment Variable：作業系統層級的「設定值」，程式可以用 os.getenv() 讀取，常用來放不同環境的設定。">環境變數</span>。</li></ul>
   <div class="call lambda">這和 Lambda 的 Environment Variables 很像。之後在 K8s 會改用 Pod 的 env、ConfigMap、Secret 來提供。</div>
@@ -1024,7 +1024,7 @@ kubectl config use-context minikube <span class="c"># 若不是，先切換</spa
 
 <span class="c"># Step 4：觀察 Node</span>
 kubectl get nodes</code></pre>
-<pre class="code" data-lang="text"><code>NAME       STATUS   ROLES           AGE   VERSION
+<pre class="code" data-lang="text" data-file="預期輸出"><code>NAME       STATUS   ROLES           AGE   VERSION
 minikube   Ready    control-plane   2m    v1.xx.x</code></pre>
   <div class="call note">練習環境只有一個 Node，Control Plane 和應用程式擠在同一台。正式 EKS 則是 AWS 代管 Control Plane，加上一組或多組 Worker Nodes。</div>
 
@@ -1153,7 +1153,7 @@ flowchart LR
 <pre class="code" data-lang="bash"><code>kubectl apply -f deployment.yaml   <span class="c"># 把期望狀態交給 K8s</span>
 kubectl get deployments
 kubectl get pods</code></pre>
-<pre class="code" data-lang="text"><code>NAME                         READY   STATUS
+<pre class="code" data-lang="text" data-file="預期輸出"><code>NAME                         READY   STATUS
 python-api-7c8d9f6b5-x2abc   1/1     Running</code></pre>
 
   <h3>6. 實驗三：用 port-forward 呼叫 K8s 裡的 API</h3>
@@ -1419,7 +1419,7 @@ flowchart TB
   <h4>用 kubectl 親眼確認「一層包一層」</h4>
   <p>這個關係可以直接驗證。假設把同一組 Python API Pod 分別用三種類型各建一個 Service（名稱加上後綴方便比較），再列出來：</p>
 <pre class="code" data-lang="bash"><code>kubectl get svc</code></pre>
-<pre class="code" data-lang="text"><code>NAME                TYPE           CLUSTER-IP     EXTERNAL-IP                                     PORT(S)        AGE
+<pre class="code" data-lang="text" data-file="預期輸出"><code>NAME                TYPE           CLUSTER-IP     EXTERNAL-IP                                     PORT(S)        AGE
 python-api          ClusterIP      10.96.100.50   &lt;none&gt;                                          80/TCP         5m
 python-api-np       NodePort       10.96.120.7    &lt;none&gt;                                          80:30080/TCP   3m
 python-api-public   LoadBalancer   10.96.140.9    k8s-default-pythonap-xxxx.elb.amazonaws.com     80:31234/TCP   1m</code></pre>
@@ -1799,7 +1799,7 @@ data:
 <pre class="code" data-lang="bash"><code>kubectl apply -f configmap.yaml
 kubectl describe configmap python-api-config</code></pre>
   <p>修改 <code>deployment.yaml</code> 的 env，改成「從 ConfigMap 取值」：</p>
-<pre class="code" data-lang="yaml"><code>env:
+<pre class="code" data-lang="yaml" data-file="deployment.yaml（env 片段）"><code>env:
   - name: APP_ENV
     valueFrom:
       configMapKeyRef:
@@ -1868,7 +1868,7 @@ stringData:
     <dt>stringData</dt><dd>用「一般文字」填值，K8s 儲存時會自動轉成 Base64 放進 <code>data</code> 欄位。如果改寫 <code>data</code>，值就必須自己先轉成 Base64。</dd>
     <dt class="i1">DEMO_API_TOKEN</dt><dd>Key 名稱與值（這裡是練習用的假 Token）。</dd>
   </dl></div>
-<pre class="code" data-lang="yaml"><code><span class="c"># deployment.yaml 的 env 加上：</span>
+<pre class="code" data-lang="yaml" data-file="deployment.yaml（env 片段）"><code><span class="c"># deployment.yaml 的 env 加上：</span>
 - name: DEMO_API_TOKEN
   valueFrom:
     secretKeyRef:
@@ -1931,7 +1931,7 @@ flowchart TD
 </pre>
     <figcaption>emptyDir：同一個 Pod 內的 Container 共享檔案；Container 重啟資料還在，Pod 被刪就消失</figcaption>
   </figure>
-<pre class="code" data-lang="yaml"><code>spec:
+<pre class="code" data-lang="yaml" data-file="deployment.yaml（Volume 片段）"><code>spec:
   template:
     spec:
       containers:
@@ -2023,7 +2023,7 @@ quadrantChart
     </div>
     <figcaption>名字很像但完全不同：Service 管網路，ServiceAccount 管身分</figcaption>
   </figure>
-<pre class="code" data-lang="yaml"><code>apiVersion: v1
+<pre class="code" data-lang="yaml" data-file="ServiceAccount 範例"><code>apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: audit-worker
@@ -2050,7 +2050,7 @@ flowchart LR
 </pre>
     <figcaption>Pod Identity：把「K8s 身分」連結到「AWS IAM Role」，boto3 自動取得臨時憑證，不需要 Access Key</figcaption>
   </figure>
-<pre class="code" data-lang="python"><code><span class="k">import</span> boto3
+<pre class="code" data-lang="python" data-file="Python 程式片段"><code><span class="k">import</span> boto3
 sqs = boto3.client(<span class="s">"sqs"</span>)   <span class="c"># 不用寫任何 Access Key，SDK 會自動取得臨時憑證</span></code></pre>
   <div class="tblw"><table><tr><th></th><th>EKS Pod Identity</th><th>IRSA</th></tr>
   <tr><td>IAM Role 關聯方式</td><td>EKS Pod Identity Association</td><td>ServiceAccount 上的 Annotation</td></tr>
@@ -2108,7 +2108,7 @@ erDiagram
   <div class="goals"><b>最重要的觀念</b>：<b>Pod 自動擴展、Node 自動擴展、健康檢查</b>是三個不同的機制。我們逐一學習，最後串成完整的 EKS 架構。</div>
 
   <h3>1. Requests：宣告「我需要多少資源」</h3>
-<pre class="code" data-lang="yaml"><code>resources:
+<pre class="code" data-lang="yaml" data-file="deployment.yaml（resources 片段）"><code>resources:
   requests:
     cpu: <span class="s">"500m"</span>       <span class="c"># 0.5 顆 vCPU</span>
     memory: <span class="s">"256Mi"</span>   <span class="c"># 256 MiB 記憶體</span></code></pre>
@@ -2134,7 +2134,7 @@ erDiagram
   <div class="call warn">Request 不代表一直佔用那麼多 CPU。Pod 宣告 500m 但實際只用 50m，Scheduler 仍會把 500m 算進這台 Node 的預算。</div>
 
   <h3>2. Limits：限制「最多能用多少」</h3>
-<pre class="code" data-lang="yaml"><code>resources:
+<pre class="code" data-lang="yaml" data-file="deployment.yaml（resources 片段）"><code>resources:
   limits:
     cpu: <span class="s">"1000m"</span>
     memory: <span class="s">"512Mi"</span></code></pre>
@@ -2254,7 +2254,7 @@ flowchart TD
     <figcaption>Readiness 失敗：Pod B 暫停接流量，但不重啟</figcaption></figure>
   </div>
   <div class="call warn"><b class="t">不要把外部資料庫狀態放進 Liveness Probe</b>否則資料庫短暫故障時，所有 API Container 會被同時重啟，造成更大的連鎖災難。資料庫連不上應該讓 Readiness 失敗（暫停接流量），而不是讓 Liveness 失敗（重啟）。</div>
-<pre class="code" data-lang="yaml"><code>readinessProbe:
+<pre class="code" data-lang="yaml" data-file="deployment.yaml（Probe 片段）"><code>readinessProbe:
   httpGet: { path: /healthz, port: 8080 }
   initialDelaySeconds: 3    <span class="c"># 啟動後等 3 秒才開始檢查</span>
   periodSeconds: 5          <span class="c"># 每 5 秒檢查一次</span>
@@ -2294,7 +2294,7 @@ livenessProbe:
     </div>
     <figcaption>startupProbe 讓慢啟動的程式有足夠時間開機，又不必放寬運行中的 Liveness 設定</figcaption>
   </figure>
-<pre class="code" data-lang="yaml"><code>startupProbe:
+<pre class="code" data-lang="yaml" data-file="deployment.yaml（startupProbe 片段）"><code>startupProbe:
   httpGet: { path: /healthz, port: 8080 }
   periodSeconds: 5
   failureThreshold: 30      # 最多容許 5 × 30 = 150 秒的啟動時間</code></pre>
@@ -2307,7 +2307,7 @@ livenessProbe:
   </dl></div>
 
   <h3>6. 動手實驗：Requests／Limits + HPA</h3>
-<pre class="code" data-lang="yaml"><code><span class="c"># deployment.yaml 的 Container 加上（本機實驗用數值）</span>
+<pre class="code" data-lang="yaml" data-file="deployment.yaml（resources 片段）"><code><span class="c"># deployment.yaml 的 Container 加上（本機實驗用數值）</span>
 resources:
   requests: { cpu: <span class="s">"100m"</span>, memory: <span class="s">"128Mi"</span> }
   limits:   { cpu: <span class="s">"500m"</span>, memory: <span class="s">"256Mi"</span> }</code></pre>
@@ -2369,7 +2369,7 @@ flowchart LR
 </pre>
     <figcaption>KEDA 依佇列長度計算副本數：<code>queueLength: "100"</code> 代表每個 Pod 目標承擔 100 則（不是一次拉取的批次大小）</figcaption>
   </figure>
-<pre class="code" data-lang="yaml"><code><span class="c"># 架構示意（需先安裝 KEDA 並設定 AWS 認證）</span>
+<pre class="code" data-lang="yaml" data-file="KEDA ScaledObject（示意）"><code><span class="c"># 架構示意（需先安裝 KEDA 並設定 AWS 認證）</span>
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
@@ -2491,7 +2491,7 @@ gantt
   <div class="call warn">Rolling Update <b>不保證零中斷</b>。如果程式沒有正確處理 Readiness、優雅關閉（Graceful Shutdown）與既有連線，更新時仍可能出現短暫錯誤，第 3 節會說明怎麼避免。</div>
 
   <h3>2. maxSurge 與 maxUnavailable</h3>
-<pre class="code" data-lang="yaml"><code>strategy:
+<pre class="code" data-lang="yaml" data-file="deployment.yaml（strategy 片段）"><code>strategy:
   type: RollingUpdate
   rollingUpdate:
     maxSurge: 1          <span class="c"># 更新期間最多可以「多」幾個 Pod</span>
@@ -2553,7 +2553,7 @@ sequenceDiagram
     <div class="chart" data-chart="shutdown"></div>
     <figcaption>preStop 先等名單更新完成，再開始關閉程式，讓「還在路上的請求」不會落空</figcaption>
   </figure>
-<pre class="code" data-lang="yaml"><code>spec:
+<pre class="code" data-lang="yaml" data-file="deployment.yaml（優雅關閉片段）"><code>spec:
   template:
     spec:
       terminationGracePeriodSeconds: 30   # 從開始關閉到強制結束的總時間
@@ -2656,7 +2656,7 @@ flowchart LR
 </pre>
     <figcaption>同一份模板 + 不同 Values = 不同環境的 K8s 資源（概念類似 CloudFormation Template + Parameters）</figcaption>
   </figure>
-<pre class="code" data-lang="text"><code>python-api-chart/
+<pre class="code" data-lang="text" data-file="Chart 目錄結構"><code>python-api-chart/
 ├── Chart.yaml          <span class="c"># Chart 名稱與版本</span>
 ├── values.yaml         <span class="c"># 預設參數</span>
 ├── values-dev.yaml
@@ -3072,7 +3072,7 @@ flowchart LR
     <figcaption>紫色由 Platform Team 維護，其餘由各團隊維護</figcaption>
   </figure>
   <h4>① Namespace：注意那個 Label</h4>
-<pre class="code" data-lang="yaml"><code>apiVersion: v1
+<pre class="code" data-lang="yaml" data-file="01-namespaces.yaml"><code>apiVersion: v1
 kind: Namespace
 metadata:
   name: lab-gateway
@@ -3098,7 +3098,7 @@ metadata:
     <dt class="i2">gateway-access: "training"</dt><dd>自訂的標籤（名稱和值都是我們自己取的）。稍後 Gateway 的 <code>allowedRoutes</code> 會檢查這個標籤，決定哪些 Namespace 能把路由掛上來。<code>lab-gateway</code> 沒有貼，因為它不需要掛路由。</dd>
   </dl></div>
   <h4>② EnvoyProxy + GatewayClass（Platform Team）</h4>
-<pre class="code" data-lang="yaml"><code>apiVersion: gateway.envoyproxy.io/v1alpha1
+<pre class="code" data-lang="yaml" data-file="02-platform.yaml"><code>apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
 metadata:
   name: eg-training-config
@@ -3138,7 +3138,7 @@ spec:
   </dl></div>
   <div class="call note"><b>EnvoyProxy 不是 Envoy Pod 本身</b>，而是一份「期望如何建立 Envoy」的規格書。Controller 依它去建立真正的 Deployment 與 Service（概念類似 Terraform 的資源定義）。</div>
   <h4>③ Gateway：宣告流量入口</h4>
-<pre class="code" data-lang="yaml"><code>apiVersion: gateway.networking.k8s.io/v1
+<pre class="code" data-lang="yaml" data-file="03-gateway.yaml"><code>apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
   name: shared-edge
@@ -3247,7 +3247,7 @@ flowchart LR
   </figure>
 
   <h3>5. 接上真正的 AWS NLB</h3>
-<pre class="code" data-lang="yaml"><code><span class="c"># 把 EnvoyProxy 的 Service 改成 LoadBalancer（假設使用 AWS Load Balancer Controller）</span>
+<pre class="code" data-lang="yaml" data-file="02-platform.yaml（EnvoyProxy 片段）"><code><span class="c"># 把 EnvoyProxy 的 Service 改成 LoadBalancer（假設使用 AWS Load Balancer Controller）</span>
 envoyService:
   type: LoadBalancer
   annotations:
@@ -3274,7 +3274,7 @@ flowchart LR
 </pre>
     <figcaption>NLB 不是 HTTPRoute 建立的：是 Envoy 的 Service 變成 LoadBalancer 後，AWS Controller 才去建立 NLB</figcaption>
   </figure>
-<pre class="code" data-lang="yaml"><code><span class="c"># 正式對外通常用 HTTPS Listener，由 Envoy 終止 TLS</span>
+<pre class="code" data-lang="yaml" data-file="03-gateway.yaml（Listener 片段）"><code><span class="c"># 正式對外通常用 HTTPS Listener，由 Envoy 終止 TLS</span>
 listeners:
   - name: https
     protocol: HTTPS
@@ -3356,7 +3356,7 @@ flowchart TB
 </pre>
     <figcaption>使用 ListenerSet：各團隊在自己的 Namespace 定義 Listener 再附加上去</figcaption></figure>
   </div>
-<pre class="code" data-lang="yaml"><code><span class="c"># Platform：Gateway 允許特定 Namespace 提供 Listener</span>
+<pre class="code" data-lang="yaml" data-file="Gateway ＋ ListenerSet（示意）"><code><span class="c"># Platform：Gateway 允許特定 Namespace 提供 Listener</span>
 spec:
   allowedListeners:
     namespaces:
@@ -3541,7 +3541,7 @@ flowchart TB
 </pre>
     <figcaption>Gateway Namespace Mode：Envoy 建在 Gateway 所在的 Namespace</figcaption></figure>
   </div>
-<pre class="code" data-lang="yaml"><code><span class="c"># Envoy Gateway 的 Helm Values（Controller 層級設定，不是 HTTPRoute 設定）</span>
+<pre class="code" data-lang="yaml" data-file="values.yaml（Envoy Gateway Helm）"><code><span class="c"># Envoy Gateway 的 Helm Values（Controller 層級設定，不是 HTTPRoute 設定）</span>
 config:
   envoyGateway:
     provider:
@@ -3727,7 +3727,7 @@ flowchart TB
 </pre>
     <figcaption>Green 不是沒啟動：它已經有自己的 Pods，可以先通過健康檢查、API 測試、依賴測試</figcaption>
   </figure>
-<pre class="code" data-lang="yaml"><code>apiVersion: argoproj.io/v1alpha1
+<pre class="code" data-lang="yaml" data-file="Blue-Green Rollout 範例"><code>apiVersion: argoproj.io/v1alpha1
 kind: Rollout                      <span class="c"># 不是 Deployment，是 Argo Rollouts 的資源</span>
 metadata:
   name: payment-api
@@ -3829,7 +3829,7 @@ flowchart LR
 <p class="look"><b>看圖重點：</b>每個綠色圓點是一次「分析通過」的檢查點，通過才往上一階。紅色虛線示範在第 15 分鐘分析失敗：權重立刻回到 0，新版只承擔過 5% 與 20% 兩個階段的流量。</p>
   <figure class="fig"><div class="chart" data-chart="canary"></div>
     <figcaption>階梯面積圖：紫色是成功的 Canary——每 10 分鐘通過分析後把權重往上推；紅色虛線是失敗路徑——分析不通過就立刻把新版流量歸 0</figcaption></figure>
-<pre class="code" data-lang="yaml"><code>rules:
+<pre class="code" data-lang="yaml" data-file="HTTPRoute（加權路由片段）"><code>rules:
   - matches:
       - path: { type: PathPrefix, value: /payment }
     backendRefs:
@@ -3851,7 +3851,7 @@ flowchart LR
     <input type="range" id="cn-r" min="0" max="100" step="5" value="5">
     <div class="meter" style="height:30px;margin:8px 0"><div id="cn-a" style="background:var(--green)"></div><div id="cn-b" style="background:var(--purple)"></div></div>
     <div class="kpis"><div class="kpi"><div class="v" id="cn-s">9,500</div><div class="l">Stable v1 請求（期望值）</div></div><div class="kpi"><div class="v" id="cn-c">500</div><div class="l">Canary v2 請求（期望值）</div></div></div>
-<pre class="code" data-lang="yaml" style="margin:6px 0 0"><code id="cn-y"></code></pre>
+<pre class="code" data-lang="yaml" data-file="HTTPRoute（權重片段）" style="margin:6px 0 0"><code id="cn-y"></code></pre>
   </div>
   <div class="call warn"><b class="t">5% 的流量 ≠ 5% 的使用者</b>權重控制的是「請求」比例。同一位使用者連續 10 個請求，可能有些進 v1、有些進 v2。如果服務依賴 Session、跨請求流程一致性，需要 Header-Based Routing 或 Session Affinity 等機制。另外流量太少時，5% 可能樣本不足，無法有效判斷新版好壞。</div>
 
@@ -3871,7 +3871,7 @@ flowchart TB
 </pre>
     <figcaption>三個角色各司其職：Argo 不碰封包；Envoy 不需要知道發布走到第幾步</figcaption>
   </figure>
-<pre class="code" data-lang="yaml"><code>strategy:
+<pre class="code" data-lang="yaml" data-file="Rollout（Canary 策略片段）"><code>strategy:
   canary:
     stableService: payment-stable
     canaryService: payment-canary
@@ -3902,7 +3902,7 @@ flowchart TB
   <h3>6. 自動判斷是否安全：AnalysisTemplate</h3>
   <div class="defs"><div class="def"><b>AnalysisTemplate</b>定義「發布期間要檢查什麼指標、成功／失敗條件」，例如 5xx 錯誤率必須低於 1%。</div>
   <div class="def"><b>Prometheus</b>常見的監控指標資料庫，用 PromQL 查詢語言查詢（第 16 堂）。</div></div>
-<pre class="code" data-lang="yaml"><code>apiVersion: argoproj.io/v1alpha1
+<pre class="code" data-lang="yaml" data-file="AnalysisTemplate 範例"><code>apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: payment-error-rate
@@ -4087,7 +4087,7 @@ flowchart LR
 </pre>
     <figcaption>RBAC 三要素：誰（Subject）→ 綁定（RoleBinding）→ 能做什麼（Role）</figcaption>
   </figure>
-<pre class="code" data-lang="yaml"><code>apiVersion: rbac.authorization.k8s.io/v1
+<pre class="code" data-lang="yaml" data-file="Role ＋ RoleBinding"><code>apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: account-reader
@@ -4162,7 +4162,7 @@ flowchart LR
 </pre>
     <figcaption>② allow-envoy-to-payment：再只開需要的門</figcaption></figure>
   </div>
-<pre class="code" data-lang="yaml"><code><span class="c"># ① 禁止所有流量進入 lab-payment 的 Pods</span>
+<pre class="code" data-lang="yaml" data-file="NetworkPolicy 範例"><code><span class="c"># ① 禁止所有流量進入 lab-payment 的 Pods</span>
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -4216,7 +4216,7 @@ flowchart LR
   </figure>
 
   <h3>4. Gateway API 的安全邊界</h3>
-<pre class="code" data-lang="yaml"><code><span class="c"># Payment Namespace 管理者授權：允許 lab-account 的 HTTPRoute 引用 payment-api Service</span>
+<pre class="code" data-lang="yaml" data-file="ReferenceGrant 範例"><code><span class="c"># Payment Namespace 管理者授權：允許 lab-account 的 HTTPRoute 引用 payment-api Service</span>
 apiVersion: gateway.networking.k8s.io/v1beta1
 kind: ReferenceGrant
 metadata:
@@ -4271,7 +4271,7 @@ aws eks create-pod-identity-association \
   <div class="defs"><div class="def"><b>IMDS（Instance Metadata Service）</b>EC2 上提供機器資訊與臨時憑證的內部服務。若沒限制，Pod 可能透過它取得 Node 的 IAM 權限。</div></div>
 
   <h3>6. ResourceQuota：避免某團隊吃光叢集</h3>
-<pre class="code" data-lang="yaml"><code>apiVersion: v1
+<pre class="code" data-lang="yaml" data-file="ResourceQuota 範例"><code>apiVersion: v1
 kind: ResourceQuota
 metadata:
   name: account-quota
@@ -4635,7 +4635,7 @@ flowchart LR
     <div class="flow" style="font-size:16px"><div class="box gray">spiffe://</div><div class="box o"><b>cluster.local</b><small>信任網域</small></div><div class="box y">/ns/<b>lab-account</b><small>Namespace</small></div><div class="box p">/sa/<b>account-api</b><small>ServiceAccount</small></div></div>
     <figcaption>工作負載身分：Payment 不必只靠來源 IP 判斷對方，而能依「身分」授權</figcaption>
   </figure>
-<pre class="code" data-lang="yaml"><code>apiVersion: security.istio.io/v1
+<pre class="code" data-lang="yaml" data-file="PeerAuthentication 範例"><code>apiVersion: security.istio.io/v1
 kind: PeerAuthentication
 metadata:
   name: default
@@ -4664,7 +4664,7 @@ flowchart LR
 </pre>
     <figcaption>NetworkPolicy 只能說「准不准連 8080」；AuthorizationPolicy 能說「誰可以呼叫哪個 HTTP 路徑」</figcaption>
   </figure>
-<pre class="code" data-lang="yaml"><code>apiVersion: security.istio.io/v1
+<pre class="code" data-lang="yaml" data-file="AuthorizationPolicy 範例"><code>apiVersion: security.istio.io/v1
 kind: AuthorizationPolicy
 metadata:
   name: allow-account-status
@@ -4711,7 +4711,7 @@ flowchart LR
     <div class="flow"><div class="box">Client → Order<small>總預算 3 秒</small></div><div class="arr">⊃</div><div class="box o">Order → Payment<small>最多 2 秒</small></div><div class="arr">⊃</div><div class="box r">Payment → Billing<small>最多 800 毫秒</small></div></div>
     <figcaption>Timeout 要像俄羅斯娃娃一層層縮小，不能每層都設 30 秒（數字需依實際 SLO 規劃）</figcaption>
   </figure>
-<pre class="code" data-lang="yaml"><code>apiVersion: networking.istio.io/v1
+<pre class="code" data-lang="yaml" data-file="VirtualService 範例"><code>apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
   name: payment-routing
@@ -4765,7 +4765,7 @@ flowchart LR
 </pre>
     <figcaption>熔斷器（Outlier Detection）：暫時排除持續出錯的 Pod，但它不會修復 Pod，也不會增加容量</figcaption>
   </figure>
-<pre class="code" data-lang="yaml"><code>apiVersion: networking.istio.io/v1
+<pre class="code" data-lang="yaml" data-file="DestinationRule 範例"><code>apiVersion: networking.istio.io/v1
 kind: DestinationRule
 metadata:
   name: payment-policy
@@ -4890,7 +4890,7 @@ flowchart TB
     <figcaption>Replica 數量 ≠ 容錯能力：3 個副本全擠在同一台機器上</figcaption>
   </figure>
   <h4>解法：Topology Spread Constraints（拓樸分散約束）</h4>
-<pre class="code" data-lang="yaml"><code>spec:
+<pre class="code" data-lang="yaml" data-file="deployment.yaml（拓樸分散片段）"><code>spec:
   replicas: 3
   template:
     metadata:
@@ -4931,7 +4931,7 @@ flowchart TB
   <h3>3. PDB：維護期間別一次搬走太多 Pod</h3>
   <div class="defs"><div class="def"><b>Voluntary Disruption（自願性中斷）</b>可預期的維護行為，例如 Node 升級、Karpenter 整併 Node 時把 Pod 移走。</div>
   <div class="def"><b>PodDisruptionBudget（PDB）</b>規定「自願性中斷時，至少要保留多少健康 Pod」。</div></div>
-<pre class="code" data-lang="yaml"><code>apiVersion: policy/v1
+<pre class="code" data-lang="yaml" data-file="PodDisruptionBudget 範例"><code>apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: payment-pdb
@@ -4994,7 +4994,7 @@ flowchart TD
 </pre>
     <figcaption><b>HPA 擴的是 Pod，不是 EC2；Karpenter 擴的是 EC2，不是 Pod</b></figcaption>
   </figure>
-<pre class="code" data-lang="text"><code>NAME                  READY   STATUS
+<pre class="code" data-lang="text" data-file="預期輸出"><code>NAME                  READY   STATUS
 payment-api-xxxx-1    1/1     Running
 payment-api-xxxx-2    1/1     Running
 payment-api-xxxx-3    1/1     Running
@@ -5137,7 +5137,7 @@ flowchart LR
 </pre>
     <figcaption>Route 53 只知道 DNS 記錄與健康檢查狀態，不直接管理 K8s Pod</figcaption>
   </figure>
-<pre class="code" data-lang="json"><code>{ <span class="s">"Name"</span>: <span class="s">"api.example.com."</span>, <span class="s">"Type"</span>: <span class="s">"CNAME"</span>, <span class="s">"SetIdentifier"</span>: <span class="s">"tokyo-primary"</span>,
+<pre class="code" data-lang="json" data-file="Route 53 記錄（JSON）"><code>{ <span class="s">"Name"</span>: <span class="s">"api.example.com."</span>, <span class="s">"Type"</span>: <span class="s">"CNAME"</span>, <span class="s">"SetIdentifier"</span>: <span class="s">"tokyo-primary"</span>,
   <span class="s">"Failover"</span>: <span class="s">"PRIMARY"</span>, <span class="s">"TTL"</span>: 60,
   <span class="s">"ResourceRecords"</span>: [{ <span class="s">"Value"</span>: <span class="s">"TOKYO_NLB_DNS_NAME"</span> }],
   <span class="s">"HealthCheckId"</span>: <span class="s">"TOKYO_HEALTH_CHECK_ID"</span> }
@@ -5328,7 +5328,7 @@ flowchart LR
     </div>
     <figcaption>可觀測性三支柱：Metrics 告訴你「有事」，Logs 告訴你「發生什麼事」，Traces 告訴你「在哪裡發生」</figcaption>
   </figure>
-<pre class="code" data-lang="json"><code>{ <span class="s">"level"</span>: <span class="s">"ERROR"</span>, <span class="s">"service"</span>: <span class="s">"payment-api"</span>, <span class="s">"message"</span>: <span class="s">"Billing service request timeout"</span>,
+<pre class="code" data-lang="json" data-file="結構化 Log（JSON）"><code>{ <span class="s">"level"</span>: <span class="s">"ERROR"</span>, <span class="s">"service"</span>: <span class="s">"payment-api"</span>, <span class="s">"message"</span>: <span class="s">"Billing service request timeout"</span>,
   <span class="s">"request_id"</span>: <span class="s">"req-abc123"</span>, <span class="s">"upstream"</span>: <span class="s">"billing-api"</span>, <span class="s">"timeout_ms"</span>: 2000 }
 <span class="c">// Log 告訴你 Payment 等 Billing 超時——但 Billing 為什麼慢？還得再去翻 Billing 和 DB 的 Log……</span></code></pre>
   <div class="defs"><div class="def"><b>Span</b>Trace 裡的一段操作紀錄（某服務做某件事花了多久）。多個 Span 組成一條 Trace。</div>
@@ -5396,7 +5396,7 @@ flowchart LR
     </div>
     <figcaption>兩種元件分開觀察，和前面學的 Control Plane／Data Plane 區分完全一致</figcaption>
   </figure>
-<pre class="code" data-lang="yaml"><code>apiVersion: gateway.envoyproxy.io/v1alpha1
+<pre class="code" data-lang="yaml" data-file="EnvoyProxy（Tracing 設定）"><code>apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
 metadata:
   name: production-envoy
@@ -5420,7 +5420,7 @@ spec:
     <dt class="i2">provider.type</dt><dd>Trace 用什麼格式送出：<code>OpenTelemetry</code>。</dd>
     <dt class="i2">provider.backendRefs</dt><dd>送到哪裡：monitoring Namespace 裡名為 <code>otel-collector</code> 的 Service、Port 4317。</dd>
   </dl></div>
-<pre class="code" data-lang="yaml"><code><span class="c"># OTel Collector 設定內容（不是可直接 kubectl apply 的 K8s 資源）</span>
+<pre class="code" data-lang="yaml" data-file="OTel Collector 設定"><code><span class="c"># OTel Collector 設定內容（不是可直接 kubectl apply 的 K8s 資源）</span>
 receivers:
   otlp:
     protocols:
@@ -5470,7 +5470,7 @@ service:
 <p class="look"><b>看圖重點：</b>大部分長條集中在左邊，但右邊拖著一條很長的尾巴。平均值和 P50 都落在左邊，只有 P95 與 P99 那兩條線揭露了尾端的真實情況。</p>
   <figure class="fig"><div class="chart" data-chart="latency"></div>
     <figcaption>直方圖（示意資料）：大部分請求集中在 100～300ms，但右邊拖著一條長尾巴。平均值只有約 280ms，「看起來還好」；P99 才揭露有 1% 的請求要等 900ms 以上</figcaption></figure>
-<pre class="code" data-lang="promql"><code><span class="c"># 估算最近 5 分鐘的 P95 延遲（Prometheus Histogram）</span>
+<pre class="code" data-lang="promql" data-file="PromQL 查詢"><code><span class="c"># 估算最近 5 分鐘的 P95 延遲（Prometheus Histogram）</span>
 histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))</code></pre>
 
   <h3>6. 最實用的技能：看懂 Envoy 的 5xx</h3>
@@ -6749,7 +6749,7 @@ flowchart TD
   /* ---------- code blocks：IDE 外框 + 語法高亮 + 行號 ---------- */
   const hasHL=typeof hljs!=='undefined'; if(hasHL) hljs.configure({ignoreUnescapedHTML:true});
   const langMap={text:'plaintext',promql:'plaintext',sh:'bash'};
-  const tabName={bash:'終端機 — bash',powershell:'Windows PowerShell',yaml:'config.yaml',python:'main.py',dockerfile:'Dockerfile',json:'data.json',text:'output.txt',promql:'query.promql'};
+  const tabName={bash:'終端機 — bash',powershell:'Windows PowerShell',yaml:'YAML 片段',python:'Python 程式',dockerfile:'Dockerfile',json:'JSON',text:'預期輸出',promql:'PromQL 查詢'};
   // 把 hljs 沒有上色的「純文字片段」再做補強：指令、參數、佔位符、輸出表頭、# 註解
   function decorate(code,rule){
     let atStart=true;

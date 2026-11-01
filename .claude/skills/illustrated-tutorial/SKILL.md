@@ -34,6 +34,8 @@ read top to bottom, and come away *understanding* — not just having seen pictu
    what it is, why it's there, which values are common, and what breaks if it's wrong.
 7. **Code must look like an IDE**, not plain white text: VS Code Dark+ token colors, a title bar with a file tab,
    a line-number gutter and a copy button. The runtime script builds all of this from `<pre class="code" data-lang data-file>`.
+   The file tab must match the prose: always set `data-file` to the file the text names, or to a label such as
+   `deployment.yaml（env 片段）` / `NetworkPolicy 範例` / `預期輸出` (rules in `references/components.md`).
 8. **Three visually distinct zones on a dark-grey background.** Text sits on neutral grey cards (dark grey to grey, no
    blue tint: the user asked for this explicitly), figures on a blue blueprint-grid canvas labeled "◆ 圖解" and numbered
    "圖 N｜", code in a dark editor frame. The user said blocks that look alike cause fatigue, so never style figures like
