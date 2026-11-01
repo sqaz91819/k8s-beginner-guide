@@ -1880,10 +1880,17 @@ stringData:
     <dt class="i2">name</dt><dd>Secret 的名稱：<code>python-api-demo-secret</code>。</dd>
     <dt class="i2">key</dt><dd>要讀 Secret 裡哪個 Key。注入到容器時，K8s 會自動把 Base64 解回原文，程式拿到的是明文。</dd>
   </dl></div>
-<pre class="code" data-lang="bash"><code>kubectl apply -f secret-demo.yaml
-kubectl apply -f deployment.yaml
+<pre class="code" data-lang="bash"><code>kubectl apply -f secret-demo.yaml              <span class="c"># ① 先建立 Secret</span>
+kubectl apply -f deployment.yaml               <span class="c"># ② env 改了 → 自動觸發滾動更新</span>
+kubectl rollout status deployment/python-api   <span class="c"># ③ 等新 Pod 全部換好</span>
 kubectl exec deployment/python-api -- python -c "import os; print(bool(os.getenv('DEMO_API_TOKEN')))"
 <span class="c"># 輸出 True —— 只確認存在，刻意不把 Token 印出來</span></code></pre>
+  <div class="call note"><b class="t">這裡為什麼不用 rollout restart？</b>因為第 ② 步改了 Deployment 的 Pod 範本（在 <code>env</code> 加了一個變數）。只要 Pod 範本有變，<code>apply</code> 就會自動做一次滾動更新，新 Pod 啟動時自然會讀到 Secret。但 <code>apply</code> 只是「開始」更新，不會等它完成；如果省略第 ③ 步，<code>exec</code> 可能挑到還沒被替換的舊 Pod，印出 <code>False</code>。另外順序不能反過來：Secret 不存在時，新 Pod 會卡在 <code>CreateContainerConfigError</code>。</div>
+  <p>要分清楚的是「改了什麼」。Pod 範本改了，K8s 會自己換 Pod；只改 Secret 或 ConfigMap 的值，Pod 範本沒變，就不會有任何動作：</p>
+  <div class="tblw"><table><tr><th>改了什麼</th><th>會自動滾動更新嗎？</th><th>程式拿到的值</th></tr>
+  <tr><td>Deployment 的 Pod 範本（例如新增 env、換 Image）</td><td>✔ 會</td><td>新 Pod 啟動時讀到最新值</td></tr>
+  <tr><td>只改 Secret／ConfigMap 的值，用環境變數注入</td><td>✖ 不會</td><td>舊值；要 <code>kubectl rollout restart</code> 才會換成新值</td></tr>
+  <tr><td>只改 Secret／ConfigMap 的值，以 Volume 檔案掛載</td><td>✖ 不會</td><td>檔案內容約 1 分鐘內自動更新（用 <code>subPath</code> 掛載的除外），但程式要自己重新讀檔</td></tr></table></div>
   <p class="lead">密碼、Token 這類資料不該和一般設定混在一起，所以 K8s 另外提供 Secret。但新手常以為「放進 Secret 就加密了」，這是很危險的誤解。Secret 存放時只是做了 Base64 編碼，任何能讀取這個 Secret 的人都能一秒還原。它的價值在於可以單獨設定更嚴格的存取權限，而不是內容本身被保護。</p>
 <p class="look"><b>看圖重點：</b>雙向箭頭表示編碼與解碼都不需要任何金鑰。真正保護 Secret 的，是 RBAC 權限控管與 etcd 的靜態加密設定。</p>
   <figure class="fig">
