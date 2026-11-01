@@ -107,12 +107,13 @@ h4{font-size:17px;margin:22px 0 6px}
 /* 術語卡片一律垂直堆疊、滿版寬度，避免窄欄造成頻繁換行 */
 .defs{display:flex;flex-direction:column;gap:10px;margin:14px 0}
 .def{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:11px 16px;background:var(--card2);font-size:15.5px;line-height:1.8}
-.def b{margin-bottom:2px}
+.def>b:first-child{margin-bottom:2px}
 /* 圖框外的「文字面板」群組也改為垂直堆疊（圖解內的並排比較圖不受影響） */
 section.lesson>.grid2:has(>.panel),section.lesson>.grid3:has(>.panel){grid-template-columns:1fr}
 section.lesson>.grid2>.panel,section.lesson>.grid3>.panel{line-height:1.8}
 section.lesson>.grid2>.panel h5,section.lesson>.grid3>.panel h5{text-align:left}
-.def b{display:block;color:var(--accent-ink);font-size:15.5px}
+/* 只有第一個粗體是卡片標題；說明文字中的粗體維持行內 */
+.def>b:first-child{display:block;color:var(--accent-ink);font-size:15.5px}
 .def i{font-style:normal;color:var(--muted);font-size:13px}
 /* ---------- figures ---------- */
 figure.fig{counter-increment:fig;position:relative;margin:24px 0;padding:30px 18px 0;border:1px solid var(--fig-line);border-top:3px solid var(--accent);border-radius:14px;background-color:var(--fig-bg);background-image:linear-gradient(var(--fig-grid) 1px,transparent 1px),linear-gradient(90deg,var(--fig-grid) 1px,transparent 1px);background-size:24px 24px;overflow-x:auto}
