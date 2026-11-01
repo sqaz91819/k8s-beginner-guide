@@ -34,9 +34,12 @@ read top to bottom, and come away *understanding* — not just having seen pictu
    what it is, why it's there, which values are common, and what breaks if it's wrong.
 7. **Code must look like an IDE**, not plain white text: VS Code Dark+ token colors, a title bar with a file tab,
    a line-number gutter and a copy button. The runtime script builds all of this from `<pre class="code" data-lang data-file>`.
-8. **Three visually distinct zones on a black background.** Text sits on charcoal cards, figures on a blue blueprint-grid
-   canvas labeled "◆ 圖解" and numbered "圖 N｜", code in a dark editor frame. The user said blocks that look alike cause
-   fatigue, so never style figures like text cards.
+8. **Three visually distinct zones on a dark-grey background.** Text sits on neutral grey cards (dark grey to grey, no
+   blue tint: the user asked for this explicitly), figures on a blue blueprint-grid canvas labeled "◆ 圖解" and numbered
+   "圖 N｜", code in a dark editor frame. The user said blocks that look alike cause fatigue, so never style figures like
+   text cards. The text palette lives in `--card/--ink/--muted/--line/--accent*`; `figure.fig,.widget` re-map those same
+   tokens to the blue `--f-*` set, so components inside a figure stay blue automatically. Never put blue (or purple)
+   inline colors on text-area elements such as badges, headings or callouts.
 9. **Text cards are stacked vertically at full width.** Never place term cards or prose panels side by side; narrow
    columns make text wrap every few words. Side-by-side layout is reserved for *figure comparisons* inside a figure
    (e.g. VM vs Container, before vs after).

@@ -22,7 +22,7 @@ Scripts at the end: Mermaid 10.9.1 (jsdelivr), highlight.js 11.9.0 + `dockerfile
   …
 </section>
 ```
-`.badge` = basics (blue), `.badge.adv` = advanced (purple). Section ids: `l1`…`lN`, `guide`, `cheat`, `glossary`.
+`.badge` = basics (dark grey), `.badge.adv` = advanced and appendix (lighter grey); no inline background colors. Section ids: `l1`…`lN`, `guide`, `cheat`, `glossary`.
 
 Part divider between groups of lessons:
 ```html

@@ -6,30 +6,42 @@
 <title>__TOPIC__ 新手圖解教學</title>
 <meta name="description" content="__ONE_SENTENCE_DESCRIPTION__">
 <style>
-/* 預設：全黑主題。三種區塊刻意使用不同質感：
-   文字區＝炭黑卡片、圖解區＝藍圖格線畫布、程式碼＝VS Code 編輯器 */
+/* 預設：深色主題。三種區塊刻意使用不同質感：
+   文字區＝中性灰（暗灰～灰，不帶藍色）、圖解區＝藍圖格線畫布、程式碼＝VS Code 編輯器 */
 :root{
-  --bg:#000000;--card:#0d0f13;--card2:#15181f;--ink:#e8ecf2;--muted:#98a3b5;--line:#22272f;
-  --accent:#5b9bff;--accent-soft:#11223d;--accent-ink:#a9c8ff;
+  --bg:#181818;--card:#232323;--card2:#2b2b2b;--ink:#e6e6e6;--muted:#a8a8a8;--line:#3a3a3a;
+  --accent:#8f8f8f;--accent-soft:#333333;--accent-ink:#dcdcdc;
+  --hero:linear-gradient(135deg,#3f3f3f 0%,#2a2a2a 100%);--badge:#4d4d4d;--badge-adv:#6b6b6b;
   --green:#3ccf7e;--green-soft:#0e271a;--orange:#ff9350;--orange-soft:#2c1a0d;
   --red:#ff6b6b;--red-soft:#2e1313;--purple:#a58bff;--purple-soft:#1f1838;
   --yellow:#f2c14e;--yellow-soft:#28210e;
   --fig-bg:#050f1d;--fig-grid:rgba(91,155,255,.10);--fig-line:#1b375e;--fig-cap:#081729;
-  --shadow:0 0 0 1px rgba(255,255,255,.015);
+  /* 圖解區與互動練習沿用原本的藍色系，由下方 figure.fig,.widget 套用 */
+  --f-card:#0d0f13;--f-card2:#15181f;--f-ink:#e8ecf2;--f-muted:#98a3b5;--f-line:#22272f;
+  --f-accent:#5b9bff;--f-accent-soft:#11223d;--f-accent-ink:#a9c8ff;
+  --shadow:0 0 0 1px rgba(255,255,255,.02);
 }
 :root[data-theme="light"]{
-  --bg:#e9edf3;--card:#ffffff;--card2:#f6f8fb;--ink:#1d2433;--muted:#5b6578;--line:#e0e5ee;
-  --accent:#326ce5;--accent-soft:#e8f0fe;--accent-ink:#1d4fb8;
+  --bg:#e4e4e4;--card:#fafafa;--card2:#f0f0f0;--ink:#222222;--muted:#5f5f5f;--line:#d6d6d6;
+  --accent:#6e6e6e;--accent-soft:#e8e8e8;--accent-ink:#2e2e2e;
+  --hero:linear-gradient(135deg,#5c5c5c 0%,#3e3e3e 100%);--badge:#555555;--badge-adv:#6b6b6b;
   --green:#12a150;--green-soft:#e3f6ea;--orange:#e8590c;--orange-soft:#fff1e6;
   --red:#d63939;--red-soft:#fde8e8;--purple:#7048e8;--purple-soft:#efeafd;
   --yellow:#b7791f;--yellow-soft:#fff8db;
   --fig-bg:#f2f7ff;--fig-grid:rgba(50,108,229,.08);--fig-line:#c6d6f2;--fig-cap:#e4edfc;
-  --shadow:0 1px 2px rgba(16,24,40,.06),0 4px 14px rgba(16,24,40,.06);
+  --f-card:#ffffff;--f-card2:#f6f8fb;--f-ink:#1d2433;--f-muted:#5b6578;--f-line:#e0e5ee;
+  --f-accent:#326ce5;--f-accent-soft:#e8f0fe;--f-accent-ink:#1d4fb8;
+  --shadow:0 1px 2px rgba(0,0,0,.06),0 4px 14px rgba(0,0,0,.06);
+}
+figure.fig,.widget{
+  --card:var(--f-card);--card2:var(--f-card2);--ink:var(--f-ink);--muted:var(--f-muted);--line:var(--f-line);
+  --accent:var(--f-accent);--accent-soft:var(--f-accent-soft);--accent-ink:var(--f-accent-ink);
+  color:var(--ink);
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:70px}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.85 "Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif;counter-reset:fig}
-a{color:var(--accent)}
+a{color:var(--accent-ink)}
 #progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);width:0;z-index:50}
 /* ---------- layout ---------- */
 #toc{position:fixed;top:0;left:0;bottom:0;width:280px;overflow-y:auto;background:var(--card);border-right:1px solid var(--line);padding:20px 16px 40px;z-index:40;font-size:14px}
@@ -51,7 +63,7 @@ main{margin-left:280px;padding:28px 40px 80px;max-width:1180px}
   main{margin-left:0;padding:56px 16px 60px}
 }
 /* ---------- hero ---------- */
-.hero{background:linear-gradient(135deg,#326ce5 0%,#5b4bd6 100%);color:#fff;border-radius:18px;padding:36px 34px;margin-bottom:28px;position:relative;overflow:hidden}
+.hero{background:var(--hero);color:#fff;border-radius:18px;padding:36px 34px;margin-bottom:28px;position:relative;overflow:hidden}
 .hero h1{margin:0 0 8px;font-size:clamp(26px,4vw,40px);line-height:1.25}
 .hero p{margin:6px 0;opacity:.95;max-width:760px}
 .hero .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
@@ -61,8 +73,8 @@ main{margin-left:280px;padding:28px 40px 80px;max-width:1180px}
 section.lesson{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:30px 34px;margin:0 0 30px;box-shadow:var(--shadow)}
 @media (max-width:700px){section.lesson{padding:20px 16px}}
 .lesson-head{display:flex;gap:16px;align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:18px}
-.badge{flex:none;width:58px;height:58px;border-radius:14px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800;font-size:22px}
-.badge.adv{background:var(--purple)}
+.badge{flex:none;width:58px;height:58px;border-radius:14px;background:var(--badge);color:#fff;display:grid;place-items:center;font-weight:800;font-size:22px}
+.badge.adv{background:var(--badge-adv)}
 .lesson-head h2{margin:0;font-size:clamp(21px,3vw,28px);line-height:1.35}
 .lesson-head .meta{color:var(--muted);font-size:14px;margin-top:4px}
 h3{font-size:21px;margin:34px 0 10px;padding-left:12px;border-left:5px solid var(--accent);line-height:1.4}
@@ -206,7 +218,7 @@ table.matrix td.y{background:var(--green)!important;color:#fff;opacity:1;font-we
 details.q{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:8px 0;background:var(--card)}
 details.q summary{cursor:pointer;font-weight:700}
 details.q[open] summary{margin-bottom:6px;color:var(--accent-ink)}
-.recap{background:linear-gradient(135deg,var(--accent-soft),var(--purple-soft));border-radius:14px;padding:16px 20px;margin-top:26px}
+.recap{background:linear-gradient(135deg,var(--accent-soft),var(--card2));border-radius:14px;padding:16px 20px;margin-top:26px}
 .recap h4{margin:0 0 6px}
 .recap ul{margin:4px 0 0;padding-left:22px}
 /* ---------- widgets ---------- */
@@ -366,7 +378,7 @@ lbctl get targets --name web-lb</code></pre>
 </section>
 
 <section class="lesson" id="glossary">
-  <div class="lesson-head"><div class="badge" style="background:var(--yellow)">B</div><div><h2>名詞辭典</h2><div class="meta">依主題分類，可直接搜尋</div></div></div>
+  <div class="lesson-head"><div class="badge adv">B</div><div><h2>名詞辭典</h2><div class="meta">依主題分類，可直接搜尋</div></div></div>
   <input id="gsearch" type="search" placeholder="🔍 搜尋名詞…" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:15px">
   <h3 class="gh">基礎</h3>
   <div class="defs g">
