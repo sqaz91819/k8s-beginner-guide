@@ -1332,27 +1332,117 @@ sequenceDiagram
   </figure>
   <div class="defs"><div class="def"><b>EndpointSlice</b>K8s 自動維護的「後端名單」，記錄某個 Service 目前對應到哪些 Pod 的 IP 和 Port。</div></div>
 
-  <h3>3. Service 的類型</h3>
-  <p class="lead">ClusterIP 解決了「叢集內部怎麼找到服務」，但它只在叢集裡有效。如果要讓叢集外的使用者連進來，就需要把入口開得更大。K8s 用 Service 的 <code>type</code> 欄位控制入口開放到什麼程度，這也是新手看到 YAML 時最常需要判斷的地方：這個服務到底有沒有對外？</p>
-<p class="look"><b>看圖重點：</b>三個方框從左到右，最左邊的呼叫者從「叢集內的 Pod」變成「外部 Client」再變成「Internet」，代表開放範圍逐步擴大。</p>
+  <h3>3. Service 的類型：入口一層一層往外加</h3>
+  <p>ClusterIP 解決了「叢集內部怎麼找到服務」，但它只在叢集裡有效。如果要讓叢集外的使用者連進來，就需要把入口開得更大。K8s 用 Service 的 <code>type</code> 欄位控制入口開放到什麼程度，這也是新手看到 YAML 時最常需要判斷的地方：這個服務到底有沒有對外？</p>
+  <div class="defs"><div class="def"><b>NodePort</b>在叢集的<b>每一台 Node</b> 上都打開同一個 Port（範圍 30000～32767）。外部機器連到任何一台 Node 的這個 Port，流量都會被轉進 Service。</div>
+  <div class="def"><b>LoadBalancer</b>請雲端建立一台<b>真正存在的外部負載平衡器</b>（例如 AWS NLB），由它接收外部流量，再送進叢集。</div></div>
+  <div class="call key"><b class="t">先記住一句話</b>三種類型共用同一個核心：叢集內的虛擬 IP。NodePort ＝ ClusterIP ＋ 每台 Node 開一個 Port；LoadBalancer ＝ NodePort ＋ 雲端的外部負載平衡器。往上升級時，<b>原本的入口都還在</b>，只是外面多開了新的門。</div>
+
+  <h4>先弄懂：ClusterIP 的「虛擬 IP」實際在哪裡？</h4>
+  <p class="lead">要看懂 LoadBalancer 和 ClusterIP 差在哪，得先知道虛擬 IP 是怎麼運作的。很多人以為 <code>10.96.100.50</code> 是一台機器，其實叢集裡<b>沒有任何機器擁有這個 IP</b>。kube-proxy 會在每台 Node 寫入一份相同的轉址規則：「送往 10.96.100.50:80 的封包，改送到 Pod A、B、C 的 8080 其中之一」。所以封包一離開 Client Pod，在它所在的那台 Node 上就被改寫了目的地，直接送往某個 Pod。</p>
+<p class="look"><b>看圖重點：</b>Node 1 和 Node 2 裡各有一份<b>一模一樣的規則表</b>；虛線框的 10.96.100.50 只是規則裡寫的一個號碼，不是任何一台機器。真正收到封包的永遠是某個 Pod。</p>
   <figure class="fig">
 <pre class="mermaid">
 flowchart LR
-    subgraph T1["ClusterIP（只在叢集內）"]
+    subgraph N1["🖥️ Node 1"]
       direction TB
-      a1["叢集內的 Pod"] --> s1["Service 虛擬 IP"] --> b1["Pods"]
+      C["Client Pod<br/>呼叫 http://python-api"]
+      R1["📋 轉址規則（kube-proxy 寫入）<br/>10.96.100.50:80 → 任一 Pod:8080"]
+      PA["Pod A<br/>10.244.0.11:8080"]
+      C -->|"① DNS 查到 10.96.100.50"| R1
     end
-    subgraph T2["NodePort（從 Node 的 Port 進來）"]
+    subgraph N2["🖥️ Node 2"]
       direction TB
-      a2["外部 Client"] -->|"NodeIP:30080"| n2["任一 Node"] --> s2["Service"] --> b2["Pods"]
+      R2["📋 同一份轉址規則<br/>（給 Node 2 上的 Pod 用）"]
+      PB["Pod B<br/>10.244.0.12:8080"]
+      PC["Pod C<br/>10.244.0.13:8080"]
     end
-    subgraph T3["LoadBalancer（請雲端建立 LB）"]
-      direction TB
-      a3["Internet"] --> lb3["AWS NLB<br/>由 Controller 建立"] --> s3["Service"] --> b3["Pods"]
-    end
+    R1 -->|"② 改寫目的地"| PA
+    R1 -.-> PB
+    R1 -.-> PC
+    V["👻 10.96.100.50<br/>沒有任何機器擁有這個 IP"] -.- R1
+    style C fill:#e8f0fe,stroke:#326ce5,color:#1d4fb8
+    style R1 fill:#e8f0fe,stroke:#326ce5,color:#1d4fb8
+    style R2 fill:#e8f0fe,stroke:#326ce5,color:#1d4fb8
+    style PA fill:#e3f6ea,stroke:#12a150,color:#0b5d2e
+    style PB fill:#e3f6ea,stroke:#12a150,color:#0b5d2e
+    style PC fill:#e3f6ea,stroke:#12a150,color:#0b5d2e
+    style V fill:#efeafd,stroke:#7048e8,color:#4c2fb0,stroke-dasharray:5 5
 </pre>
-    <figcaption>三種常見 Service 類型：入口從「只限內部」逐步擴大到「雲端負載平衡器」</figcaption>
+    <figcaption>ClusterIP 的虛擬 IP 不是一台機器，而是每台 Node 上一份相同的轉址規則：封包在出發的那台 Node 上就被改寫成某個 Pod 的 IP</figcaption>
   </figure>
+  <p>也因為規則只存在叢集的 Node 上，叢集外的電腦（例如你的筆電）送出往 <code>10.96.100.50</code> 的封包，根本不會經過這些規則，所以 ClusterIP 從外面連不到。</p>
+
+  <h4>LoadBalancer：同一套規則，外面再加兩道門</h4>
+  <p class="lead">現在把 <code>type</code> 改成 <code>LoadBalancer</code>。K8s 不會換掉剛才那套虛擬 IP 規則，而是在外面多做兩件事。第一，在每台 Node 開一個 NodePort（例如 31234），並補一條規則：「從 31234 進來的流量，也照這個 Service 的規則轉給 Pod」。第二，通知雲端建立一台負載平衡器；在 EKS 上由 AWS Load Balancer Controller 建立 NLB，NLB 再把收到的流量送到各 Node 的 NodePort。於是同一個 Service 有了兩個入口：叢集內走虛擬 IP，叢集外走 NLB。</p>
+<p class="look"><b>看圖重點：</b>藍色是叢集內的路線，和上一張圖一模一樣；橘色是 LoadBalancer 新增的外部路線。兩條路線最後進入<b>同一份轉址規則</b>，到達同一組 Pod。整張圖只有 NLB 是「真的存在、有自己網址的機器」，而且它在叢集外面。</p>
+  <figure class="fig">
+<pre class="mermaid">
+flowchart TB
+    U["🌐 Internet 使用者"]
+    NLB["⚖️ AWS NLB（叢集外、真的存在的機器）<br/>k8s-default-pythonap-xxxx.elb.amazonaws.com"]
+    U ==>|"① 只需要知道 NLB 的網址"| NLB
+    subgraph K["Kubernetes 叢集"]
+      direction TB
+      subgraph N1["🖥️ Node 1"]
+        direction TB
+        CP["Client Pod<br/>呼叫 http://python-api-public"]
+        NP1["🚪 NodePort 31234"]
+        R1["📋 轉址規則<br/>10.96.140.9:80 或 Node:31234<br/>→ 任一 Pod:8080"]
+        CP -->|"叢集內：走虛擬 IP 10.96.140.9"| R1
+        NP1 --> R1
+      end
+      subgraph N2["🖥️ Node 2"]
+        direction TB
+        NP2["🚪 NodePort 31234"]
+        R2["📋 同一份轉址規則"]
+        NP2 --> R2
+      end
+      P["Pod A ／ B ／ C（:8080）"]
+      R1 --> P
+      R2 --> P
+    end
+    NLB ==>|"② 轉給任一 Node 的 31234"| NP1
+    NLB ==> NP2
+    style U fill:#fff1e6,stroke:#e8590c,color:#7a2e00
+    style NLB fill:#fff1e6,stroke:#e8590c,color:#7a2e00
+    style NP1 fill:#fff1e6,stroke:#e8590c,color:#7a2e00
+    style NP2 fill:#fff1e6,stroke:#e8590c,color:#7a2e00
+    style CP fill:#e8f0fe,stroke:#326ce5,color:#1d4fb8
+    style R1 fill:#e8f0fe,stroke:#326ce5,color:#1d4fb8
+    style R2 fill:#e8f0fe,stroke:#326ce5,color:#1d4fb8
+    style P fill:#e3f6ea,stroke:#12a150,color:#0b5d2e
+</pre>
+    <figcaption>LoadBalancer ＝ ClusterIP 那套規則 ＋ 每台 Node 的 NodePort ＋ 雲端 NLB。叢集內照舊走虛擬 IP；外部流量經 NLB → NodePort，進入同一份規則</figcaption>
+  </figure>
+
+  <h4>用 kubectl 親眼確認「一層包一層」</h4>
+  <p>這個關係可以直接驗證。假設把同一組 Python API Pod 分別用三種類型各建一個 Service（名稱加上後綴方便比較），再列出來：</p>
+<pre class="code" data-lang="bash"><code>kubectl get svc</code></pre>
+<pre class="code" data-lang="text"><code>NAME                TYPE           CLUSTER-IP     EXTERNAL-IP                                     PORT(S)        AGE
+python-api          ClusterIP      10.96.100.50   &lt;none&gt;                                          80/TCP         5m
+python-api-np       NodePort       10.96.120.7    &lt;none&gt;                                          80:30080/TCP   3m
+python-api-public   LoadBalancer   10.96.140.9    k8s-default-pythonap-xxxx.elb.amazonaws.com     80:31234/TCP   1m</code></pre>
+  <div class="tblw"><table><tr><th>欄位</th><th>這裡要看什麼</th></tr>
+  <tr><td><code>CLUSTER-IP</code></td><td><b>三個都有值</b>。LoadBalancer 類型一樣有叢集內的虛擬 IP，叢集內的 Pod 照樣用 <code>http://python-api-public</code> 呼叫，不會繞到外面的 NLB。</td></tr>
+  <tr><td><code>PORT(S)</code></td><td><code>80:31234</code> 的冒號前面是 Service 的 port，後面是 K8s 自動分配的 NodePort。NodePort 和 LoadBalancer 都有這一段，ClusterIP 只有 <code>80</code>。</td></tr>
+  <tr><td><code>EXTERNAL-IP</code></td><td>只有 LoadBalancer 有值，是雲端 NLB 的網址，也是外部使用者唯一需要知道的位址。</td></tr></table></div>
+  <div class="call tip"><b class="t">在 Minikube 上會看到 &lt;pending&gt;</b>本機沒有雲端可以幫你建負載平衡器，所以 LoadBalancer 的 <code>EXTERNAL-IP</code> 會一直停在 <code>&lt;pending&gt;</code>。可以另開一個終端機執行 <code>minikube tunnel</code>，由 Minikube 模擬一個外部 IP。</div>
+  <p class="lead">把上面的觀察整理成一張對照表。表格由上往下看，每一列代表一種能力，而且越下面的能力越「靠外面」：先是叢集內的名稱和虛擬 IP，再來是 Node 的 Port，最後是雲端的負載平衡器。</p>
+<p class="look"><b>看圖重點：</b>綠格排成階梯狀：越往右的類型綠格越多，而且<b>一定包含左邊類型的所有綠格</b>。這就是「外層一定能做到內層的事」。</p>
+  <figure class="fig">
+    <div class="tblw" style="margin:0"><table class="matrix">
+      <tr><th>能力 ＼ 類型</th><th>ClusterIP</th><th>NodePort</th><th>LoadBalancer</th></tr>
+      <tr><td>叢集內用名稱呼叫（python-api）</td><td class="y">✔</td><td class="y">✔</td><td class="y">✔</td></tr>
+      <tr><td>有叢集內的虛擬 IP（CLUSTER-IP）</td><td class="y">✔</td><td class="y">✔</td><td class="y">✔</td></tr>
+      <tr><td>每台 Node 開一個 30000～32767 的 Port</td><td>✖</td><td class="y">✔</td><td class="y">✔</td></tr>
+      <tr><td>雲端建立一台真的負載平衡器（另外計費）</td><td>✖</td><td>✖</td><td class="y">✔</td></tr>
+      <tr><td>外部使用者有固定、好記的網址</td><td>✖</td><td>✖</td><td class="y">✔</td></tr>
+    </table></div>
+    <figcaption>三種 Service 類型的能力對照：右邊的類型包含左邊的全部能力，再多加一層</figcaption>
+  </figure>
+  <p>NodePort 其實也能從外面連，但使用者必須知道某一台 Node 的 IP；Node 被替換或縮減時，那個 IP 就失效了。這也是正式環境很少直接把 NodePort 給使用者，而是在前面再加一台負載平衡器的原因。</p>
+  <p>最後把所有類型整理成表格，其中 <code>ExternalName</code> 比較特別，它不轉送流量，只是一個 DNS 別名：</p>
   <div class="tblw"><table><tr><th>Service 類型</th><th>主要用途</th><th>存取方式</th></tr>
   <tr><td><code>ClusterIP</code></td><td>叢集內部服務（最常用）</td><td>內部虛擬 IP／DNS</td></tr>
   <tr><td><code>NodePort</code></td><td>測試，或給外部 LB 當後端入口</td><td><code>NodeIP:NodePort</code></td></tr>
@@ -1362,7 +1452,164 @@ flowchart LR
 <p class="look"><b>看圖重點：</b>從最內圈往外看，每一圈都包含裡面那一圈的能力；圖中三條虛線分別代表三種呼叫者能碰到的最外層。</p>
   <figure class="fig"><div class="chart" data-chart="svcrings"></div>
     <figcaption>三種 Service 是「一層包一層」的關係：LoadBalancer 預設也會配置 NodePort 與 ClusterIP，所以外層一定能做到內層的事，只是開放的範圍越來越大</figcaption></figure>
+
+  <h4>在 EKS 上：NLB 送到 Node，還是直接送到 Pod？</h4>
+  <p class="lead">前面的圖裡，NLB 把流量送到 Node 的 NodePort，再由 Node 上的規則轉給 Pod。這叫 <b>instance 模式</b>，在任何雲端都能用。但 EKS 有個特點：它的網路外掛 VPC CNI 會讓每個 Pod 直接拿到一個<b>真正的 VPC IP</b>，NLB 本身就連得到。所以 EKS 還能用 <b>ip 模式</b>：NLB 直接把 Pod 的 IP 登記成目標，跳過 NodePort 和 Node 上的轉址規則。</p>
+<p class="look"><b>看圖重點：</b>左圖多了一站（Node 的 31234），封包可能先到 Node 1，再被轉到 Node 2 上的 Pod；右圖 NLB 直接連到 Pod，少一次轉送。右圖的 Pod IP 是 VPC 網段（10.0.x.x），不是只在叢集內有效的位址。</p>
+  <div class="grid2">
+    <figure class="fig">
+<pre class="mermaid">
+flowchart TB
+    N["⚖️ NLB"] --> A["🚪 Node 1:31234"]
+    N --> B["🚪 Node 2:31234"]
+    A --> R["📋 Node 上的轉址規則"]
+    B --> R
+    R --> P["Pod A ／ B ／ C"]
+    style A fill:#fff1e6,stroke:#e8590c,color:#7a2e00
+    style B fill:#fff1e6,stroke:#e8590c,color:#7a2e00
+    style P fill:#e3f6ea,stroke:#12a150,color:#0b5d2e
+</pre>
+      <figcaption>instance 模式：NLB → NodePort → Pod</figcaption>
+    </figure>
+    <figure class="fig">
+<pre class="mermaid">
+flowchart TB
+    N["⚖️ NLB"] --> PA["Pod A<br/>10.0.1.21:8080"]
+    N --> PB["Pod B<br/>10.0.2.37:8080"]
+    N --> PC["Pod C<br/>10.0.3.15:8080"]
+    style PA fill:#e3f6ea,stroke:#12a150,color:#0b5d2e
+    style PB fill:#e3f6ea,stroke:#12a150,color:#0b5d2e
+    style PC fill:#e3f6ea,stroke:#12a150,color:#0b5d2e
+</pre>
+      <figcaption>ip 模式（EKS 常用）：NLB 直接 → Pod 的 VPC IP</figcaption>
+    </figure>
+  </div>
+  <p>不管哪種模式，Service 的 ClusterIP 都還在，叢集內的呼叫照樣走虛擬 IP。差別只在「外部流量從 NLB 進來後，走哪條路到 Pod」。在 EKS 上建立 LoadBalancer Service，YAML 和第 6 節的 ClusterIP 版本相比，只多了 <code>type</code> 和幾個給 AWS Load Balancer Controller 看的 annotation：</p>
+<pre class="code" data-lang="yaml" data-file="service-public.yaml"><code>apiVersion: v1
+kind: Service
+metadata:
+  name: python-api-public
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: external            <span class="c"># 交給 AWS LB Controller</span>
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip       <span class="c"># 直接送到 Pod IP</span>
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing   <span class="c"># 對 Internet 公開</span>
+spec:
+  type: LoadBalancer       <span class="c"># 唯一必要的改變</span>
+  selector:
+    app: python-api        <span class="c"># 和 ClusterIP 版本相同的 Pod</span>
+  ports:
+    - port: 80
+      targetPort: 8080</code></pre>
+  <div class="yg"><div class="yg-h">📖 逐欄位說明：service-public.yaml</div><dl>
+    <dt class="i1">metadata.annotations</dt><dd>給 AWS Load Balancer Controller 看的「訂單備註」。K8s 本身不讀這些值，Controller 看到後才照著去 AWS 建立 NLB。</dd>
+    <dt class="i2">aws-load-balancer-type</dt><dd><code>external</code> 代表交給 AWS Load Balancer Controller 處理，而不是 K8s 內建的舊版雲端整合。</dd>
+    <dt class="i2">nlb-target-type</dt><dd><code>ip</code> 讓 NLB 直接把 Pod IP 登記成目標（上方右圖）；改成 <code>instance</code> 則送到各 Node 的 NodePort（上方左圖）。</dd>
+    <dt class="i2">aws-load-balancer-scheme</dt><dd><code>internet-facing</code> 建立對 Internet 公開的 NLB；不寫時預設是 <code>internal</code>，只有 VPC 內部連得到。</dd>
+    <dt class="i1">spec.type</dt><dd><code>LoadBalancer</code>：K8s 照樣配置 ClusterIP 與 NodePort，再由 Controller 建立 NLB。</dd>
+    <dt class="i1">spec.selector／ports</dt><dd>和 ClusterIP 版本完全相同：後端是同一組 Pod，<code>port</code>／<code>targetPort</code> 規則也一樣。</dd>
+    <dd class="yg-note">🔗 建立後執行 <code>kubectl get svc python-api-public</code>，<code>EXTERNAL-IP</code> 會從 <code>&lt;pending&gt;</code> 變成 NLB 的網址；AWS 建立 NLB 通常需要幾分鐘。</dd>
+  </dl></div>
+
+  <h4>instance 還是 ip？優缺點與實際選擇</h4>
+  <p>上面的 YAML 選了 <code>ip</code>。兩種模式都能把流量送到 Pod，差別在於路上多了什麼、少了什麼。先看最直接影響延遲和費用的一點：流量會不會「繞路」。</p>
+  <p class="lead">正式環境的 EKS 通常把 Node 分散在多個可用區（AZ），Pod 也分散在不同的 Node 上。在 instance 模式下，NLB 只認識 Node，不知道 Pod 在哪裡：流量先送到某台 Node，再由 Node 上的轉址規則挑一個 Pod，而挑中的 Pod 很可能在另一台 Node，甚至另一個 AZ。在 ip 模式下，NLB 自己挑 Pod，直接送過去，不會多繞這一段。</p>
+<p class="look"><b>看圖重點：</b>上圖紅色虛線就是「多繞的一段」：封包進了 AZ-a 的 Node 1，卻被轉到 AZ-b 的 Pod B。這多了一次轉送，也多一筆 AWS 跨 AZ 流量費；而且 Node 轉送時會把來源 IP 換成自己的，Pod B 看到的不是真正的使用者 IP。下圖沒有這一段。</p>
+    <figure class="fig">
+<pre class="mermaid">
+flowchart LR
+    NLB["⚖️ NLB"]
+    subgraph AZA["AZ-a"]
+      direction TB
+      N1["🖥️ Node 1:31234"]
+      PA["Pod A"]
+    end
+    subgraph AZB["AZ-b"]
+      PB["Pod B"]
+    end
+    NLB --> N1
+    N1 -.->|"再轉一次（跨 AZ）<br/>來源 IP 變成 Node 的"| PB
+    N1 --> PA
+    linkStyle 1 stroke:#d63939,stroke-width:2px
+    style N1 fill:#fff1e6,stroke:#e8590c,color:#7a2e00
+    style PA fill:#e3f6ea,stroke:#12a150,color:#0b5d2e
+    style PB fill:#e3f6ea,stroke:#12a150,color:#0b5d2e
+</pre>
+      <figcaption>instance 模式：可能多繞一段，甚至跨 AZ</figcaption>
+    </figure>
+    <figure class="fig">
+<pre class="mermaid">
+flowchart LR
+    NLB["⚖️ NLB"]
+    subgraph AZB["AZ-b"]
+      PB["Pod B<br/>10.0.2.37"]
+    end
+    subgraph AZA["AZ-a"]
+      PA["Pod A<br/>10.0.1.21"]
+    end
+    NLB --> PA
+    NLB --> PB
+    style PA fill:#e3f6ea,stroke:#12a150,color:#0b5d2e
+    style PB fill:#e3f6ea,stroke:#12a150,color:#0b5d2e
+</pre>
+      <figcaption>ip 模式：NLB 直接選 Pod，沒有中間轉送</figcaption>
+    </figure>
+  <p>除了路徑，兩種模式在網路需求、健康檢查和部署更新上也各有取捨：</p>
+  <div class="tblw"><table><tr><th>比較項目</th><th>instance（NLB → Node:NodePort）</th><th>ip（NLB → Pod）</th></tr>
+  <tr><td>轉送路徑</td><td>NLB → Node → Pod，可能跨 Node、跨 AZ</td><td>NLB 直接到 Pod，少一次轉送</td></tr>
+  <tr><td>對網路的要求</td><td>只要 NLB 連得到 Node 就行，<b>任何 CNI 都能用</b></td><td>Pod IP 必須在 VPC 內可直接連線（EKS 預設的 VPC CNI 符合）</td></tr>
+  <tr><td>EKS Fargate</td><td>✖ 不支援：Fargate 沒有可以登記的 Node</td><td>✔ Fargate 只能用 ip</td></tr>
+  <tr><td>真實使用者 IP</td><td>Node 轉送時來源 IP 會被改掉。要保留，得設 <code>externalTrafficPolicy: Local</code>（只送給本機的 Pod），代價是沒有 Pod 的 Node 收不到流量、分配可能不均</td><td>不經過 Node 轉送，不會被改掉；是否把使用者 IP 交給 Pod，由 NLB 的設定（client IP preservation 或 Proxy Protocol）決定</td></tr>
+  <tr><td>健康檢查</td><td>NLB 檢查的是 Node 的 NodePort，看不到個別 Pod</td><td>NLB 直接檢查每一個 Pod</td></tr>
+  <tr><td>NLB 登記的目標</td><td>Node：數量少，Pod 更新時名單不用改</td><td>每一個 Pod：Pod 一換，NLB 的名單就得跟著改</td></tr>
+  <tr><td>部署更新時的風險</td><td>較低：Pod 名單由 Node 上的規則幾秒內更新</td><td>較高：NLB 登記／移除目標需要時間，要搭配 readiness gate 與 preStop</td></tr>
+  <tr><td>NodePort</td><td>每個 Service 佔用一個 30000～32767 的 Port，Node 的安全群組要開放這段範圍</td><td>用不到 NodePort</td></tr></table></div>
+
+  <p class="lead">表格裡 ip 模式唯一明顯的缺點是「部署更新時的風險」，這值得多花一點時間理解。NLB 登記一個新目標並確認它健康，通常要幾十秒以上；但對 K8s 來說，新 Pod 的 readinessProbe 一通過就算 Ready，Deployment 會立刻開始刪舊 Pod。如果舊 Pod 都刪光了，新 Pod 卻還沒在 NLB 上變成健康目標，NLB 就沒有任何可用的目標，使用者會連線失敗。AWS Load Balancer Controller 的解法叫 <span class="term" tabindex="0" data-tip="Pod readiness gate：額外的 Ready 條件。AWS Load Balancer Controller 會等 Pod 在 NLB／ALB 上變成健康目標後，才把這個條件設為通過。">Pod readiness gate</span>：規定 Pod 必須「在 NLB 上也健康」才算 Ready。</p>
+<p class="look"><b>看圖重點：</b>沒有 readiness gate 時，Deployment 在第 ③ 步就開始刪舊 Pod，這時 NLB 還不能把流量送給新 Pod。有 readiness gate 時，要等第 ⑥ 步 Controller 確認 NLB 健康檢查通過，Pod 才真正 Ready，Deployment 才會繼續替換下一個。</p>
+  <figure class="fig">
+<pre class="mermaid">
+sequenceDiagram
+    participant D as Deployment
+    participant P as 新 Pod
+    participant C as LB Controller
+    participant N as NLB
+    D->>P: ① 建立新 Pod
+    P->>P: ② 程式啟動，readinessProbe 通過
+    Note over D,C: ③ 沒有 readiness gate 時：這裡就算 Ready，開始刪舊 Pod ⚠️
+    C->>N: ④ 把新 Pod 的 IP 登記為目標
+    N-->>C: ⑤ NLB 健康檢查通過
+    C->>P: ⑥ readiness gate 通過，Pod 真正 Ready
+    D->>D: ⑦ 安全地替換下一個舊 Pod
+</pre>
+    <figcaption>ip 模式的滾動更新：readiness gate 讓「K8s 認為 Ready」和「NLB 能送流量」變成同一件事</figcaption>
+  </figure>
+  <p>開啟方式是替 Namespace 加上一個 Label，之後在這個 Namespace 建立的 Pod 都會自動帶上 readiness gate：</p>
+<pre class="code" data-lang="bash"><code>kubectl label namespace default elbv2.k8s.aws/pod-readiness-gate-inject=enabled</code></pre>
+  <div class="call note">舊 Pod 被移除時，NLB 也需要時間把它從目標名單拿掉（deregistration delay，預設 300 秒），這段時間仍可能有連線送進來。所以第 7 堂「優雅關閉」提到的 preStop 等待，在 ip 模式下更重要。</div>
+
+  <p class="lead">實際選擇時，依序問兩個問題通常就能決定。關鍵在於 Pod 的 IP 能不能被 NLB 直接連到：EKS 預設的 VPC CNI 會給每個 Pod 一個 VPC IP，所以答案通常是「可以」；但如果叢集換成 overlay 網路（Pod IP 只在叢集內有效），NLB 就只能透過 Node 進來。</p>
+<p class="look"><b>看圖重點：</b>從上往下走，大多數使用 EKS 預設網路的服務都會落在綠色的 ip 模式；只有網路條件不允許時，才落到橘色的 instance 模式。</p>
+  <figure class="fig">
+<pre class="mermaid">
+flowchart TD
+    Q1{"Pod 跑在 EKS Fargate？"}
+    Q1 -->|"是"| IP1["✅ ip 模式（唯一選擇）"]
+    Q1 -->|"否"| Q2{"Pod IP 在 VPC 內可直接連線？<br/>（EKS 預設 VPC CNI ＝ 是）"}
+    Q2 -->|"是"| IP2["✅ ip 模式<br/>＋ readiness gate ＋ preStop"]
+    Q2 -->|"否：Calico／Cilium overlay 等"| INS["instance 模式<br/>需要真實 IP 時加 externalTrafficPolicy: Local"]
+    style IP1 fill:#e3f6ea,stroke:#12a150,color:#0b5d2e
+    style IP2 fill:#e3f6ea,stroke:#12a150,color:#0b5d2e
+    style INS fill:#fff1e6,stroke:#e8590c,color:#7a2e00
+</pre>
+    <figcaption>選擇 NLB 目標模式的簡易判斷流程</figcaption>
+  </figure>
+  <div class="tblw"><table><tr><th>實際情境</th><th>常見選擇</th><th>原因</th></tr>
+  <tr><td>EKS（VPC CNI）上的一般 Web／API 服務</td><td><code>ip</code></td><td>少一次轉送、沒有跨 AZ 繞路、NLB 直接檢查每個 Pod；EKS 官方最佳實務也建議使用 ip</td></tr>
+  <tr><td>EKS Fargate 上的服務</td><td><code>ip</code></td><td>沒有 Node 可以登記，只能用 ip</td></tr>
+  <tr><td>叢集改用 overlay 網路（Pod IP 不在 VPC）</td><td><code>instance</code></td><td>NLB 連不到 Pod IP，只能從 Node 進來</td></tr>
+  <tr><td>舊叢集、沒有安裝 AWS Load Balancer Controller</td><td><code>instance</code></td><td>K8s 內建的雲端整合只支援把 Node 登記成目標</td></tr></table></div>
   <div class="call warn"><b class="t">type: LoadBalancer 最容易誤解</b>K8s 不會自己跑一台軟體 Load Balancer。它是<b>請雲端環境幫忙建立</b>外部負載平衡器。在 EKS 裡通常由 <span class="term" tabindex="0" data-tip="AWS Load Balancer Controller：安裝在 EKS 裡的元件，看到 Service／Ingress 設定後，會自動去 AWS 建立 NLB 或 ALB。">AWS Load Balancer Controller</span> 或 EKS Auto Mode 建立 NLB。</div>
+  <div class="call ana"><b class="t">生活比喻</b>ClusterIP 像公司的內線分機，只有公司裡的人撥得通。NodePort 像在每一棟辦公大樓都開一個號碼相同的側門，外面的人得自己知道是哪一棟。LoadBalancer 則是在大馬路旁設一個真正有人站的服務櫃台，客人只要記住櫃台地址，櫃台會把人帶進大樓。不論從哪個門進來，最後找的都是同一組客服人員（Pod），內線分機也一直都能用。</div>
 
   <h3>4. Ingress：處理 HTTP／HTTPS 路由規則</h3>
   <p>假設有三個服務 <code>user-api</code>、<code>payment-api</code>、<code>admin-api</code>，想共用一個網域 <code>api.example.com</code>，依網址路徑分流：</p>
@@ -1499,6 +1746,7 @@ flowchart LR
     <li><b>Ingress</b> 是 L7 路由規則，要有 <b>Ingress Controller</b> 才會生效；EKS 常轉成 ALB。</li>
     <li><code>type: LoadBalancer</code> 是「請雲端建立 LB」，不是 K8s 自己當 LB。</li></ul></div>
   <details class="q"><summary>自我檢查：Pod 重建後 IP 改了，為什麼 <code>http://python-api</code> 還能用？</summary>因為呼叫的是 Service 名稱。CoreDNS 解析到固定的 Service IP，而 Service 會依 EndpointSlice 中最新的 Pod 名單轉送。</details>
+  <details class="q"><summary>自我檢查：Service 改成 LoadBalancer 後，叢集內其他 Pod 呼叫它會繞到外面的 NLB 嗎？</summary>不會。LoadBalancer 類型一樣有 ClusterIP（<code>kubectl get svc</code> 的 CLUSTER-IP 欄有值），叢集內用名稱呼叫時，DNS 解析到的是這個虛擬 IP，封包在 Node 上就被轉到 Pod。NLB 只負責叢集外進來的流量。</details>
   <details class="q"><summary>自我檢查：只寫了 Ingress YAML，卻沒裝 Ingress Controller，會怎樣？</summary>什麼都不會發生。Ingress 只是規則，沒有 Controller 去執行，就沒有任何流量入口。</details>
 </section>
 
@@ -6007,7 +6255,9 @@ flowchart TD
   <h3 class="gh">網路</h3>
   <div class="defs g">
     <div class="def"><b>Service</b>為一組 Pod 提供固定名稱與虛擬 IP 的網路入口。<i>第 4 堂</i></div>
-    <div class="def"><b>ClusterIP／NodePort／LoadBalancer</b>Service 的三種主要類型：內部、Node Port、雲端 LB。<i>第 4 堂</i></div>
+    <div class="def"><b>ClusterIP／NodePort／LoadBalancer</b>Service 的三種主要類型，一層包一層：叢集內虛擬 IP → 再加每台 Node 的 Port → 再加雲端負載平衡器。<i>第 4 堂</i></div>
+    <div class="def"><b>instance／ip 目標模式</b>NLB 把流量送到 Node 的 NodePort（instance），或直接送到 Pod 的 VPC IP（ip）。<i>第 4 堂</i></div>
+    <div class="def"><b>Pod readiness gate</b>額外的 Ready 條件：Pod 要在 NLB／ALB 上也變成健康目標，才算 Ready。<i>第 4 堂</i></div>
     <div class="def"><b>EndpointSlice</b>Service 背後可用 Pod 的名單。<i>第 4 堂</i></div>
     <div class="def"><b>CoreDNS</b>叢集內部 DNS，把 Service 名稱解析成 IP。<i>第 4 堂</i></div>
     <div class="def"><b>kube-proxy</b>設定 Node 網路規則，把 Service 流量轉給 Pod。<i>第 4 堂</i></div>
