@@ -879,7 +879,7 @@ flowchart LR
   <tr><td><b>kubelet</b></td><td>每個 Node 上的代理程式，負責把 Pod 真的跑起來</td><td>各分店店長</td></tr></table></div>
   <div class="call tip">現在不用背這些名字。只要知道：<b>K8s 裡有一套管理系統，會決定「哪些程式應該在哪台機器執行」</b>，就夠了。</div>
   <p class="lead">上一張圖是靜態的「有哪些元件」，這張圖則是動態的「它們怎麼合作」。了解這個順序對除錯很有幫助：如果 Pod 一直是 Pending，代表卡在 Scheduler 分配 Node 那一步；如果已經分配了卻停在 ContainerCreating，問題通常在 kubelet 下載 Image 或啟動容器那一步。</p>
-<p class="look"><b>看圖重點：</b>所有元件都只跟 API Server 溝通，彼此不直接對話；etcd 只負責記錄。這種「透過中央資料庫協作」的設計，是 K8s 能持續協調狀態的基礎。</p>
+<p class="look"><b>看圖重點：</b>所有元件都只跟 API Server 溝通，彼此不直接對話；etcd 只負責記錄。<b>實線</b>是元件主動送出的請求（寫入、綁定、回報）；<b>虛線</b>是 API Server 沿著元件事先開好的「訂閱連線」推送過去的通知。最上面那段說明就是這條訂閱線，圖裡沒有任何一步是「一直重複問有沒有新工作」。</p>
   <figure class="fig">
 <pre class="mermaid">
 sequenceDiagram
@@ -887,17 +887,43 @@ sequenceDiagram
     participant API as API Server
     participant DB as etcd
     participant S as Scheduler
-    participant K as Node 上的 kubelet
-    U->>API: kubectl apply（我要 1 個 Pod）
-    API->>DB: 記錄期望狀態
-    S->>API: 這個 Pod 還沒分配 Node
-    S->>API: 分配到 Node 2
-    K->>API: 我是 Node 2，有新工作嗎？
-    K->>K: 下載 Image、啟動 Container
-    K->>API: 回報 Pod 狀態：Running
+    participant K as Node 2 的 kubelet
+    Note over API,K: 事前：Scheduler 與 kubelet 啟動時就向 API Server 開好 Watch（訂閱）連線
+    U->>API: ① kubectl apply（我要 1 個 Pod）
+    API->>DB: ② 寫入 Pod（還沒指定 Node）
+    API-->>S: ③ 通知：有一個還沒分配 Node 的新 Pod
+    S->>S: ④ 篩選、評分，選出 Node 2
+    S->>API: ⑤ 綁定：這個 Pod 放到 Node 2
+    API->>DB: ⑥ 寫入 nodeName = Node 2
+    API-->>K: ⑦ 通知：有一個分配給 Node 2 的 Pod
+    K->>K: ⑧ 下載 Image、啟動 Container
+    K->>API: ⑨ 回報 Pod 狀態：Running
 </pre>
-    <figcaption>一次 <code>kubectl apply</code> 背後發生的事：各元件透過 API Server 協作</figcaption>
+    <figcaption>一次 <code>kubectl apply</code> 背後發生的事：虛線是 API Server 沿著 Watch 連線推送的通知，實線是元件主動送出的請求</figcaption>
   </figure>
+  <div class="defs"><div class="def"><b>Watch（監看／訂閱）</b>元件先向 API Server 開一條<b>長時間不關閉的連線</b>，說好「某類資源有變化時告訴我」。之後每當資料改變，API Server 就沿著這條連線把變化即時送過去。</div></div>
+  <p class="lead">看到這裡可能會有疑問：Scheduler 怎麼知道有新的 Pod？常見的做法有三種。第一種是 Scheduler 每隔幾秒去問一次（輪詢），但這樣會有延遲，叢集大的時候還會白白製造大量請求。第二種是 API Server 有新 Pod 時主動打電話給 Scheduler，可是這樣 API Server 就得記住每個元件的位址，元件剛好重啟時通知也會漏掉。K8s 用的是第三種 Watch：連線由 Scheduler 開，資料由 API Server 推。</p>
+<p class="look"><b>看圖重點：</b>比較三欄箭頭的方向。左欄的請求一直重複，大多數都白問；中欄是 API Server 主動找人；右欄只有一條由 Scheduler 開的連線，之後所有通知都沿著這條線從 API Server 送回來。</p>
+  <figure class="fig">
+    <div class="grid3">
+      <div class="panel"><h5>① 輪詢（Polling）</h5><div class="flow col">
+        <div class="box">Scheduler</div><div class="arr" style="font-size:13.5px;font-weight:600;text-align:center;line-height:1.5">↓ 有新 Pod 嗎？</div><div class="box gray">API Server：沒有</div>
+        <div class="arr" style="font-size:13.5px;font-weight:600;text-align:center;line-height:1.5">↓ 3 秒後：有嗎？</div><div class="box gray">API Server：沒有</div>
+        <div class="arr" style="font-size:13.5px;font-weight:600;text-align:center;line-height:1.5">↓ 3 秒後：有嗎？</div><div class="box g">API Server：有 1 個</div></div>
+        <p style="font-size:13px;color:var(--muted);margin:8px 0 0">❌ 最慢要等一輪才知道；大部分請求都白問</p></div>
+      <div class="panel"><h5>② API Server 主動呼叫</h5><div class="flow col">
+        <div class="box">API Server</div><div class="arr" style="font-size:13.5px;font-weight:600;text-align:center;line-height:1.5">↓ 打電話給 Scheduler</div><div class="box">Scheduler</div>
+        <div class="arr" style="font-size:13.5px;font-weight:600;text-align:center;line-height:1.5">↓ 也要通知 kubelet、各種 Controller……</div><div class="box r">要記住所有元件的位址</div></div>
+        <p style="font-size:13px;color:var(--muted);margin:8px 0 0">❌ 元件剛好重啟時，這次通知就漏掉了</p></div>
+      <div class="panel"><h5>③ Watch（K8s 的做法）</h5><div class="flow col">
+        <div class="box">Scheduler</div><div class="arr" style="font-size:13.5px;font-weight:600;text-align:center;line-height:1.5">↓ 開一條長連線：「Pod 有變化就告訴我」</div><div class="box">API Server</div>
+        <div class="arr" style="font-size:13.5px;font-weight:600;text-align:center;line-height:1.5">↑ 有新 Pod，立刻沿這條線推送</div><div class="box g">Scheduler 馬上收到</div></div>
+        <p style="font-size:13px;color:var(--muted);margin:8px 0 0">✅ 連線由元件開，資料由 API Server 推</p></div>
+    </div>
+    <figcaption>元件怎麼知道「有新工作」：K8s 不輪詢，也不由 API Server 主動找人，而是讓元件訂閱（Watch）</figcaption>
+  </figure>
+  <p>所以常見的直覺「應該是 API Server 通知 Scheduler」只對了一半：<b>資料確實是 API Server 推給 Scheduler 的</b>，但那條連線是 Scheduler 自己先開的。API Server 不需要知道有哪些元件存在，只要對著所有開著的 Watch 連線推送變化。這也是 K8s 容易擴充的原因：之後學到的各種 Controller（例如第 11 堂的 Argo Rollouts、第 12 堂的 External Secrets Operator），都是用同樣的方式 Watch API Server，不必修改 API Server 本身。</p>
+  <div class="call note"><b class="t">元件重啟時會不會漏掉通知？</b>不會。元件啟動時會先「List」一次，把目前所有資料完整拿一份，再開始「Watch」後續的變化，這個組合叫 List-Watch。就算 Scheduler 重啟了一分鐘，回來時先 List 一次，就會看到這段時間累積、還沒分配 Node 的 Pod。第 12 堂 RBAC 權限裡的 <code>get</code>／<code>list</code>／<code>watch</code>，其中的 <code>watch</code> 指的就是這條訂閱連線。</div>
 
   <h4>EKS 又是什麼？</h4>
   <p class="lead">知道了 Control Plane 的重要性，自然會想到：這麼關鍵的東西，誰來維護？自己架設 K8s 時，Control Plane 的高可用、升級、備份都是你的工作，而且出錯的代價很高。EKS 就是把這部分交給 AWS，你只需要管 Worker Node 和應用程式。</p>
@@ -6268,6 +6294,7 @@ flowchart TD
     <div class="def"><b>EndpointSlice</b>Service 背後可用 Pod 的名單。<i>第 4 堂</i></div>
     <div class="def"><b>CoreDNS</b>叢集內部 DNS，把 Service 名稱解析成 IP。<i>第 4 堂</i></div>
     <div class="def"><b>kube-proxy</b>設定 Node 網路規則，把 Service 流量轉給 Pod。<i>第 4 堂</i></div>
+    <div class="def"><b>Watch／List-Watch</b>元件向 API Server 訂閱資源變化：先 List 拿到全部現況，再用長連線接收後續變化，不需要輪詢。<i>第 3 堂</i></div>
     <div class="def"><b>Ingress／Ingress Controller</b>HTTP 路由規則，以及執行規則的程式。<i>第 4 堂</i></div>
     <div class="def"><b>L4／L7</b>傳輸層（IP、Port）與應用層（HTTP 內容）。<i>第 4 堂</i></div>
     <div class="def"><b>ALB／NLB</b>AWS 的 L7 與 L4 負載平衡器。<i>第 4 堂</i></div>
